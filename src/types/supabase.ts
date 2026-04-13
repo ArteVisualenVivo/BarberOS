@@ -1,3 +1,11 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
 export type Database = {
   public: {
     Tables: {
@@ -5,54 +13,57 @@ export type Database = {
         Row: {
           id: string
           nombre: string
-          email_owner: string
-          created_at: string
           slug: string
+          email_owner: string | null
           telefono: string | null
-          plan_activo: boolean
+
+          // ✅ FIX IMPORTANTE: en runtime puede venir null desde Supabase
+          plan_activo: boolean | null
+
           fecha_expiracion: string | null
+          created_at: string
         }
         Insert: {
           id?: string
           nombre: string
-          email_owner: string
-          created_at?: string
           slug: string
+          email_owner?: string | null
           telefono?: string | null
-          plan_activo?: boolean
+          plan_activo?: boolean | null
           fecha_expiracion?: string | null
+          created_at?: string
         }
         Update: {
           id?: string
           nombre?: string
-          email_owner?: string
-          created_at?: string
           slug?: string
+          email_owner?: string | null
           telefono?: string | null
-          plan_activo?: boolean
+          plan_activo?: boolean | null
           fecha_expiracion?: string | null
+          created_at?: string
         }
       }
 
       usuarios: {
         Row: {
           id: string
-          barberia_id: string
-          nombre: string
+          barberia_id: string | null
+          nombre: string | null
           rol: 'admin' | 'barbero'
           created_at: string
         }
         Insert: {
           id: string
-          barberia_id: string
-          nombre: string
+          barberia_id?: string | null
+          nombre?: string | null
           rol?: 'admin' | 'barbero'
           created_at?: string
         }
         Update: {
           id?: string
-          barberia_id?: string
-          nombre?: string
+          barberia_id?: string | null
+          nombre?: string | null
           rol?: 'admin' | 'barbero'
           created_at?: string
         }
@@ -64,7 +75,7 @@ export type Database = {
           barberia_id: string
           nombre: string
           precio: number
-          duracion: string
+          duracion: string | null
           popular: boolean
           created_at: string
         }
@@ -73,7 +84,7 @@ export type Database = {
           barberia_id: string
           nombre: string
           precio: number
-          duracion: string
+          duracion?: string | null
           popular?: boolean
           created_at?: string
         }
@@ -82,7 +93,7 @@ export type Database = {
           barberia_id?: string
           nombre?: string
           precio?: number
-          duracion?: string
+          duracion?: string | null
           popular?: boolean
           created_at?: string
         }
@@ -92,37 +103,52 @@ export type Database = {
         Row: {
           id: string
           barberia_id: string
+          servicio_id: string | null
           usuario_id: string | null
           cliente_nombre: string
           cliente_whatsapp: string
           fecha: string
           hora: string
           estado: 'pendiente' | 'confirmado' | 'cancelado'
+          monto_total: number
           created_at: string
         }
         Insert: {
           id?: string
           barberia_id: string
+          servicio_id?: string | null
           usuario_id?: string | null
           cliente_nombre: string
           cliente_whatsapp: string
           fecha: string
           hora: string
           estado?: 'pendiente' | 'confirmado' | 'cancelado'
+          monto_total?: number
           created_at?: string
         }
         Update: {
           id?: string
           barberia_id?: string
+          servicio_id?: string | null
           usuario_id?: string | null
           cliente_nombre?: string
           cliente_whatsapp?: string
           fecha?: string
           hora?: string
           estado?: 'pendiente' | 'confirmado' | 'cancelado'
+          monto_total?: number
           created_at?: string
         }
       }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
     }
   }
 }
