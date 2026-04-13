@@ -8,6 +8,9 @@ export type Database = {
           email_owner: string
           created_at: string
           slug: string
+          telefono: string | null
+          plan_activo: boolean
+          fecha_expiracion: string | null
         }
         Insert: {
           id?: string
@@ -15,6 +18,9 @@ export type Database = {
           email_owner: string
           created_at?: string
           slug: string
+          telefono?: string | null
+          plan_activo?: boolean
+          fecha_expiracion?: string | null
         }
         Update: {
           id?: string
@@ -22,8 +28,12 @@ export type Database = {
           email_owner?: string
           created_at?: string
           slug?: string
+          telefono?: string | null
+          plan_activo?: boolean
+          fecha_expiracion?: string | null
         }
       }
+
       usuarios: {
         Row: {
           id: string
@@ -47,6 +57,7 @@ export type Database = {
           created_at?: string
         }
       }
+
       servicios: {
         Row: {
           id: string
@@ -76,6 +87,7 @@ export type Database = {
           created_at?: string
         }
       }
+
       turnos: {
         Row: {
           id: string
