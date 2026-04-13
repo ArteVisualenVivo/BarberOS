@@ -1,0 +1,50 @@
+BARBEROS - FLUJO DEL DUEÑO (GESTIÓN DEL NEGOCIO)
+=================================================
+
+Este archivo detalla cómo el dueño de la barbería utiliza BarberOS para administrar su negocio día a día.
+
+1. CONFIGURACIÓN INICIAL (DASHBOARD)
+------------------------------------
+- Canal: El dueño accede a su "Panel de Control" (Google Sheets).
+- Pantalla: Pestaña "CONFIGURACIÓN".
+- Experiencia: Define sus servicios, precios, horarios de atención y el link de cobro de señas de Mercado Pago.
+
+2. RECEPCIÓN DE RESERVAS
+------------------------
+- Acción: Cada vez que un cliente reserva, el dueño recibe una notificación.
+- Canal: Google Calendar (Evento creado automáticamente) y WhatsApp (Link de notificación).
+- Experiencia: 
+  - Ve en su calendario de Google el nombre del cliente, el servicio y la hora exacta.
+  - Recibe un mensaje en su WhatsApp Business: "Nueva reserva: [Nombre] - [Servicio] - [Fecha/Hora]".
+
+3. GESTIÓN DE LA AGENDA
+-----------------------
+- Acción: El dueño puede ver su día completo en vista de calendario.
+- Pantalla: Google Calendar App (Móvil o Desktop).
+- Experiencia: 
+  - Identifica qué turnos tienen la seña pagada (mediante etiquetas en el nombre del evento).
+  - Puede mover o cancelar turnos manualmente (esto libera el horario en el sistema de reservas).
+  - Puede bloquear horarios (ej: almuerzo, feriado) simplemente creando un evento privado en su calendario.
+
+4. CONTROL DE INGRESOS (MÉTRICAS)
+---------------------------------
+- Acción: El dueño revisa su reporte de ingresos mensual.
+- Pantalla: Pestaña "REPORTES" en Google Sheets.
+- Experiencia: 
+  - Visualiza gráficos automáticos de cuántos servicios realizó por categoría.
+  - Consulta el total recaudado en señas (conciliación con Mercado Pago).
+  - Identifica sus mejores clientes (quiénes reservan más seguido).
+
+5. ATENCIÓN AL CLIENTE
+----------------------
+- Acción: El dueño envía recordatorios personalizados.
+- Canal: WhatsApp Business.
+- Experiencia: Usa plantillas de respuesta rápida para confirmar turnos o avisar retrasos sutiles.
+
+6. CIERRE DE CAJA
+-----------------
+- Acción: Al final del día, el dueño marca en el Sheet los turnos como "Asistió" o "No Asistió".
+- Resultado: El sistema actualiza automáticamente sus estadísticas de ocupación y rentabilidad.
+
+---
+BarberOS: Menos administración, más cortes.

@@ -1,0 +1,52 @@
+BARBEROS - ARQUITECTURA DEL SISTEMA Y ESTRUCTURA DEL MVP
+======================================================
+
+Este archivo describe cómo se organiza BarberOS para ser escalable, profesional y vendible como un SaaS (Software as a Service).
+
+1. ESTRUCTURA DEL PROYECTO (DISEÑO ESCALABLE)
+---------------------------------------------
+/BarberOS
+├── /frontend (React/Next.js - Proyectado)
+│   ├── /components (UI Premium, Booking, Dashboard)
+│   ├── /pages (Screens: Home, Servicios, Reserva, Confirmación)
+│   └── /services (API, WhatsApp, Pagos)
+├── /config (Multi-tenant)
+│   └── barber_settings.json (Configuración por barbería: logos, precios, horarios)
+└── /docs (Documentación Técnica y Operativa)
+
+2. IMPLEMENTACIÓN MVP (FUNCIONAL Y GRATUITO)
+--------------------------------------------
+Para el lanzamiento rápido (MVP), el sistema se estructura así:
+
+A. CAPA VISUAL (FRONTEND)
+   - Herramienta: Google Sites.
+   - Función: Landing page con look & feel de app móvil.
+   - Secciones: Home, Catálogo de Servicios, Botón "Reservar Ahora".
+
+B. CAPA DE CAPTURA (FORMULARIO)
+   - Herramienta: Google Forms.
+   - Función: Recolección de datos del cliente (Nombre, WhatsApp, Servicio, Fecha/Hora).
+   - Configuración: Mensaje de confirmación personalizado con link de pago.
+
+C. CAPA DE DATOS (BASE DE DATOS)
+   - Herramienta: Google Sheets.
+   - Función: Registro centralizado de todas las reservas y clientes.
+   - Automatización: Google Apps Script sincroniza con Google Calendar.
+
+D. CAPA DE PAGOS (FINANZAS)
+   - Herramienta: Mercado Pago (Links de pago).
+   - Función: Cobro de señas fijas para validar el compromiso del cliente.
+
+E. CAPA DE COMUNICACIÓN
+   - Herramienta: WhatsApp Business API (o links wa.me).
+   - Función: Confirmación inmediata y recordatorios 2 horas antes del turno.
+
+3. ESCALABILIDAD SAAS (MULTI-BARBERÍA)
+--------------------------------------
+Cada barbería recibe su propio "kit" de BarberOS:
+- Un subdominio de Google Sites (ej: sites.google.com/view/barberia-x).
+- Un Google Sheet exclusivo para sus datos.
+- Su propia cuenta de Mercado Pago integrada.
+- Un calendario de Google Calendar dedicado a sus profesionales.
+
+Todo el sistema está diseñado para ser clonable en menos de 30 minutos para un nuevo cliente.

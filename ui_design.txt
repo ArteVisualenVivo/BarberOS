@@ -1,0 +1,49 @@
+BARBEROS - DISEÑO VISUAL Y EXPERIENCIA DE USUARIO (UI/UX)
+=========================================================
+
+Este archivo define la estética "Premium Dark Mode" de BarberOS para que se vea como una aplicación móvil real.
+
+1. SISTEMA DE DISEÑO (LOOK & FEEL)
+----------------------------------
+- Estilo: Minimalista, elegante y moderno.
+- Inspiración: Uber (Simplicidad), Spotify (Oscuridad profunda), Apple (Jerarquía).
+- Fondo (Background): Negro absoluto (#000000).
+- Superficies (Cards): Antracita oscuro (#121212) con bordes redondeados de 24px.
+- Color de Acento (Acción): Oro Mate (#D4AF37) para botones y estados activos.
+- Tipografía: SF Pro Display (o Inter), moderna y fácil de leer en móviles.
+
+2. COMPONENTES CLAVE DE LA INTERFAZ
+------------------------------------
+A. BARRA DE NAVEGACIÓN (BOTTOM BAR)
+   - Iconos: Inicio, Servicios, Mis Turnos, Admin.
+   - Estilo: Iconos de línea fina en gris tenue, resaltando en oro el seleccionado.
+
+B. TARJETAS DE SERVICIOS (SERVICE CARDS)
+   - Diseño: Imagen de fondo con overlay oscuro, nombre del servicio en blanco y precio en oro.
+   - Interacción: Efecto de elevación sutil al ser seleccionada.
+
+C. BOTÓN DE ACCIÓN (CTA)
+   - Estilo: Botón de ancho completo en la parte inferior de la pantalla.
+   - Color: Oro con texto negro en negrita ("RESERVAR TURNO").
+
+D. CALENDARIO DE RESERVAS
+   - Diseño: Selector de fecha horizontal (scroll de días).
+   - Horas: Grid de botones redondeados. Horas libres en oro suave, horas ocupadas en gris oscuro tachadas.
+
+3. EXPERIENCIA DE USUARIO (UX)
+------------------------------
+- Velocidad: Carga instantánea de elementos visuales.
+- Feedback: Micro-animaciones al tocar botones (cambio de color o escala sutil).
+- Claridad: No más de 3 pasos para completar una reserva.
+- Sensación: El usuario siente que está usando una herramienta de lujo, no un simple formulario.
+
+4. ADAPTACIÓN PARA GOOGLE SITES (MVP)
+-------------------------------------
+Para simular este diseño en Google Sites:
+- Temas: Seleccionar tema "Aristóteles" o "Diplomático" con colores personalizados (#000000 y #D4AF37).
+- Imágenes: Usar banners de ancho completo con fotos de alta calidad de barberías reales.
+- Botones: Insertar botones personalizados con el color de acento definido.
+- Tipografía: Elegir fuentes Sans Serif modernas disponibles en Google Fonts (como Roboto o Open Sans).
+
+---
+BarberOS: El diseño es el primer corte que ve el cliente.
