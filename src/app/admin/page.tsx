@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Calendar, DollarSign, Loader2,
-  CheckCircle2, XCircle, Scissors, Clock4
+  Loader2
 } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/types/supabase'
@@ -29,7 +28,10 @@ export default function AdminDashboardPage() {
     const fetchData = async () => {
       const bId = await getAdminBarberiaId()
 
-      if (!bId) return router.push('/login')
+      if (!bId) {
+        router.push('/login')
+        return
+      }
 
       setBarberiaId(bId)
 
@@ -41,7 +43,7 @@ export default function AdminDashboardPage() {
 
       if (barberiaData) setBarberia(barberiaData)
 
-      // ✅ FIX CRÍTICO: tipado explícito
+      // 🔥 FIX CLAVE: tipado explícito para evitar "never"
       const { data: turnosData } = await supabase
         .from('turnos')
         .select('*')
@@ -49,7 +51,7 @@ export default function AdminDashboardPage() {
         .order('fecha', { ascending: true })
         .order('hora', { ascending: true })
 
-      const typedTurnos: Turno[] = turnosData ?? []
+      const typedTurnos: Turno[] = (turnosData ?? []) as Turno[]
 
       setTurnos(typedTurnos)
 
@@ -69,7 +71,7 @@ export default function AdminDashboardPage() {
         .select('*')
         .eq('barberia_id', bId)
 
-      setServicios(serviciosData ?? [])
+      setServicios((serviciosData ?? []) as Servicio[])
 
       setLoading(false)
     }
