@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
 
+const LICENSE_CODE_REGEX = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -11,6 +13,10 @@ export async function POST(req: Request) {
     }
 
     const normalizedCode = String(code).toUpperCase().trim();
+    if (!LICENSE_CODE_REGEX.test(normalizedCode)) {
+      return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 400 });
+    }
+
     const licenseRef = db.collection("licenses").doc(normalizedCode);
     const licenseSnap = await licenseRef.get();
 
@@ -19,32 +25,41 @@ export async function POST(req: Request) {
     }
 
     const licenseData = licenseSnap.data();
+    const appId = licenseData?.appId || licenseData?.project || null;
+
+    const expiresAtField = licenseData?.expiresAt;
+    const expiresAt = expiresAtField ? new Date(expiresAtField.toDate ? expiresAtField.toDate() : expiresAtField) : null;
+    const now = new Date();
 
     if (
       !licenseData ||
       licenseData.status !== "active" ||
-      licenseData.used === true
+      licenseData.used === true ||
+      appId !== "barberos" ||
+      (expiresAt && now >= expiresAt)
     ) {
       return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 400 });
     }
 
-    const now = new Date();
-    const expiresAt = new Date(now);
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    const licenseExpiresAt = new Date(now);
+    licenseExpiresAt.setDate(licenseExpiresAt.getDate() + 30);
 
     await db.collection("barberias").doc(barberiaId).update({
       plan: "pro",
       subscriptionStatus: "active",
-      licenseCode: code,
+      licenseCode: normalizedCode,
       licenseStartAt: now,
       licenseDurationDays: 30,
-      licenseExpiresAt: expiresAt,
+      licenseExpiresAt,
       trialExpired: true,
     });
 
     await licenseRef.update({
       used: true,
       barberia_id: barberiaId,
+      activatedAt: now,
+      appId: "barberos",
+      licenseCode: normalizedCode,
     });
 
     return NextResponse.json({ ok: true });
@@ -53,3 +68,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 500 });
   }
 }
+

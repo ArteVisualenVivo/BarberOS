@@ -50,7 +50,7 @@ export default function RegisterPage() {
         trialDays,
         subscriptionStatus: "trial",
         trialExpired: false,
-        licenseCode: "",
+        licenseCode: null,
         licenseStartAt: null,
         licenseDurationDays: 0,
         licenseExpiresAt: null,

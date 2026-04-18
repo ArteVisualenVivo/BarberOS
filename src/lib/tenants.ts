@@ -37,6 +37,11 @@ const toDate = (value: any): Date | null => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
+export function isValidLicenseCode(value: any): boolean {
+  if (!value || typeof value !== "string") return false;
+  return /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(value.toUpperCase().trim());
+}
+
 export function isTrialExpired(barberia: Barberia): boolean {
   if (barberia.plan !== "trial") return false;
   if (barberia.trialExpired) return true;
@@ -68,7 +73,8 @@ export function hasActiveTrial(barberia: Barberia): boolean {
 export function hasActiveProLicense(barberia: Barberia): boolean {
   if (barberia.plan !== "pro") return false;
   if (barberia.subscriptionStatus !== "active") return false;
-  if (!barberia.licenseExpiresAt) return false;
+  if (!barberia.licenseCode || !isValidLicenseCode(barberia.licenseCode)) return false;
+  if (!barberia.licenseStartAt || !barberia.licenseExpiresAt) return false;
 
   const expiresAt = toDate(barberia.licenseExpiresAt);
   if (!expiresAt) return false;
