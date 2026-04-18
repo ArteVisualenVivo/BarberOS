@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const { barberia } = useBarberia();
   const { user, userData } = useAuth();
   const router = useRouter();
+  const [origin, setOrigin] = useState("");
   const [stats, setStats] = useState({
     turnosHoy: 0,
     clientesTotal: 0,
@@ -31,6 +32,12 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [recientes, setRecientes] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   useEffect(() => {
     if (barberia) {
@@ -97,6 +104,29 @@ export default function DashboardPage() {
     },
   ];
 
+  const bookingUrl = barberia?.slug && origin ? `${origin}/reservar/${barberia.slug}` : "";
+  const mensaje = bookingUrl
+    ? `📅 Reserva tu turno conmigo de forma rápida:\n${bookingUrl}\n\nElegí día y horario disponible en segundos`
+    : "";
+  const whatsappUrl = bookingUrl
+    ? `https://wa.me/?text=${encodeURIComponent(mensaje)}`
+    : "";
+
+  const handleCopyLink = async () => {
+    if (!bookingUrl) return;
+    await navigator.clipboard.writeText(bookingUrl);
+  };
+
+  const handleCopyMessage = async () => {
+    if (!mensaje) return;
+    await navigator.clipboard.writeText(mensaje);
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!whatsappUrl) return;
+    window.open(whatsappUrl, "_blank");
+  };
+
   return (
     <div className="space-y-10">
       {/* Page Header */}
@@ -106,6 +136,62 @@ export default function DashboardPage() {
           <p className="text-sm text-zinc-500 mt-1">Bienvenido de nuevo, {userData?.nombre || "Barber"}. Esto es lo que está pasando hoy.</p>
         </div>
       </div>
+
+      {bookingUrl && (
+        <div className="glass rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+          <div className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-white">📢 Trae clientes automáticamente</h2>
+              <p className="text-sm text-zinc-400 mt-1">Comparte este link en Instagram, WhatsApp o Facebook para que tus clientes reserven solos</p>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Link de reservas</label>
+                <input
+                  readOnly
+                  value={bookingUrl}
+                  className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="rounded-3xl bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] hover:bg-zinc-200 transition"
+              >
+                Copiar link
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Mensaje listo para redes</label>
+              <textarea
+                readOnly
+                value={mensaje}
+                rows={4}
+                className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none resize-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={handleCopyMessage}
+                className="w-full sm:w-auto rounded-3xl bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] hover:bg-zinc-200 transition"
+              >
+                Copiar mensaje
+              </button>
+              <button
+                type="button"
+                onClick={handleShareWhatsApp}
+                className="w-full sm:w-auto rounded-3xl bg-emerald-500 px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] text-black hover:bg-emerald-400 transition"
+              >
+                Compartir por WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
