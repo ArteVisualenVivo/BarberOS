@@ -19,17 +19,9 @@ export default function ActivatePage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [error, setError] = useState("");
 
-  const handleWhatsAppActivation = () => {
-    const message = encodeURIComponent(
-      `Hola, quiero activar BarberOS\n\n` +
-      `Nombre de barbería: ${barberia?.nombre}\n` +
-      `Email: ${user?.email}\n` +
-      `Teléfono: ${barberia?.telefono || "no definido"}`
-    );
-
-    const phone = "5493512417121";
-
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+  const handleWhatsApp = () => {
+    const message = encodeURIComponent("Hola, quiero activar BarberOS");
+    window.open(`https://wa.me/5493512417121?text=${message}`, "_blank");
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -111,10 +103,10 @@ export default function ActivatePage() {
 
             <button
               type="button"
-              onClick={handleWhatsAppActivation}
+              onClick={handleWhatsApp}
               className="w-full rounded-3xl bg-emerald-500 px-6 py-4 text-sm font-bold uppercase tracking-[0.2em] text-black transition hover:bg-emerald-400"
             >
-              Solicitar activación por WhatsApp
+              Activar por WhatsApp
             </button>
           </div>
 

@@ -192,7 +192,7 @@ export default function DashboardPage() {
                 </div>
                 <h3 className="text-sm font-bold text-white">Sin actividad reciente</h3>
                 <p className="text-xs text-zinc-500 mt-1 max-w-[220px]">Los nuevos turnos aparecerán aquí una vez que sean reservados.</p>
-                <Link href="/turnos" className="mt-6 text-xs font-bold px-6 py-2.5 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all shadow-soft">
+                <Link href="/turnos?nuevo=true" className="mt-6 text-xs font-bold px-6 py-2.5 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all shadow-soft">
                   Crear Primer Turno
                 </Link>
               </div>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
             <p className="text-xs text-zinc-500 leading-relaxed mb-6 font-medium">
               Desbloquea analíticas avanzadas, turnos ilimitados y marca personalizada para tu negocio.
             </p>
-            <Link href="/settings" className="block w-full text-center py-3 bg-white/[0.03] text-white border border-white/[0.08] rounded-xl text-xs font-bold hover:bg-white hover:text-black transition-all shadow-soft group-hover:border-white/20">
+            <Link href="/activate" className="block w-full text-center py-3 bg-white/[0.03] text-white border border-white/[0.08] rounded-xl text-xs font-bold hover:bg-white hover:text-black transition-all shadow-soft group-hover:border-white/20">
               Mejorar Ahora
             </Link>
           </div>

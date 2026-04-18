@@ -2,9 +2,10 @@
 
 import { useBarberia } from "@/hooks/useBarberia";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { 
   getTenantCollection, 
+  addTenantDoc,
   updateTenantDoc, 
   deleteTenantDoc, 
   COLLECTIONS 
@@ -33,12 +34,22 @@ type ViewMode = "lista" | "semana" | "dia";
 export default function TurnosAdmin() {
   const { barberia } = useBarberia();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isNuevo = searchParams.get("nuevo") === "true";
   const [turnos, setTurnos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("lista");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [filtro, setFiltro] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
+  const [clienteNombre, setClienteNombre] = useState("");
+  const [clienteWhatsapp, setClienteWhatsapp] = useState("");
+  const [servicioNombre, setServicioNombre] = useState("");
+  const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [hora, setHora] = useState("");
+  const [precio, setPrecio] = useState("");
+  const [turnoError, setTurnoError] = useState("");
+  const [savingTurno, setSavingTurno] = useState(false);
 
   useEffect(() => {
     if (barberia) {
@@ -54,6 +65,44 @@ export default function TurnosAdmin() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateTurno = async () => {
+    if (!barberia) return;
+    if (!clienteNombre.trim() || !servicioNombre.trim() || !fecha || !hora.trim()) {
+      setTurnoError("Completa cliente, servicio, fecha y hora para crear el turno.");
+      return;
+    }
+
+    setTurnoError("");
+    setSavingTurno(true);
+
+    try {
+      await addTenantDoc(COLLECTIONS.TURNOS, {
+        barberiaId: barberia.id,
+        clienteNombre: clienteNombre.trim(),
+        clienteWhatsapp: clienteWhatsapp.trim(),
+        servicioNombre: servicioNombre.trim(),
+        fecha,
+        hora: hora.trim(),
+        precio: Number(precio) || 0,
+        estado: "pendiente",
+      });
+
+      setClienteNombre("");
+      setClienteWhatsapp("");
+      setServicioNombre("");
+      setFecha(new Date().toISOString().slice(0, 10));
+      setHora("");
+      setPrecio("");
+      setSavingTurno(false);
+      router.push("/turnos");
+      fetchTurnos();
+    } catch (error) {
+      console.error("Error creando turno:", error);
+      setTurnoError("No se pudo guardar el turno. Intenta nuevamente.");
+      setSavingTurno(false);
     }
   };
 
@@ -196,6 +245,96 @@ export default function TurnosAdmin() {
           )}
         </div>
       </div>
+
+      {isNuevo && (
+        <div className="glass rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+          <div className="flex flex-col gap-6 mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-white">Crear nuevo turno</h2>
+              <p className="text-sm text-zinc-500 mt-1">Completa los datos para registrar el turno en tu barbería.</p>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Cliente</label>
+                <input
+                  type="text"
+                  value={clienteNombre}
+                  onChange={(e) => setClienteNombre(e.target.value)}
+                  placeholder="Nombre del cliente"
+                  className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">WhatsApp</label>
+                <input
+                  type="tel"
+                  value={clienteWhatsapp}
+                  onChange={(e) => setClienteWhatsapp(e.target.value)}
+                  placeholder="5493512417121"
+                  className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Servicio</label>
+                <input
+                  type="text"
+                  value={servicioNombre}
+                  onChange={(e) => setServicioNombre(e.target.value)}
+                  placeholder="Corte clásico, barba, etc."
+                  className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Fecha</label>
+                  <input
+                    type="date"
+                    value={fecha}
+                    onChange={(e) => setFecha(e.target.value)}
+                    className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Hora</label>
+                  <input
+                    type="time"
+                    value={hora}
+                    onChange={(e) => setHora(e.target.value)}
+                    className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2 lg:col-span-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Precio</label>
+                <input
+                  type="number"
+                  value={precio}
+                  onChange={(e) => setPrecio(e.target.value)}
+                  placeholder="0"
+                  className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                />
+              </div>
+            </div>
+
+            {turnoError && (
+              <div className="rounded-3xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-sm text-rose-200">
+                {turnoError}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+              <button
+                onClick={handleCreateTurno}
+                disabled={savingTurno}
+                className="w-full sm:w-auto rounded-3xl bg-emerald-500 px-6 py-4 text-sm font-bold uppercase tracking-[0.2em] text-black transition hover:bg-emerald-400 disabled:opacity-50"
+              >
+                {savingTurno ? "Guardando..." : "Crear turno"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       {loading ? (
@@ -344,7 +483,7 @@ export default function TurnosAdmin() {
               <h3 className="text-sm font-bold text-white">Sin actividad reciente</h3>
               <p className="text-xs text-zinc-500 mt-1 max-w-[220px]">Los nuevos turnos aparecerán aquí una vez que sean reservados.</p>
               <button 
-                onClick={() => router.push("/turnos/nuevo")}
+                onClick={() => router.push("/turnos?nuevo=true")}
                 className="mt-6 text-xs font-bold px-6 py-2.5 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all shadow-soft"
               >
                 Crear Primer Turno
