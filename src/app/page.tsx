@@ -177,7 +177,7 @@ export default function SaaSLandingPage() {
               },
               {
                 title: "Pagos Unificados",
-                desc: "Pagos con Stripe integrados para señas y cobros totales.",
+                desc: "Controla pagos y cobros dentro de tu agenda sin integraciones externas.",
                 icon: BarChart3
               },
               {

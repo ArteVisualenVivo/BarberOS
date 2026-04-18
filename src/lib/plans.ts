@@ -34,7 +34,6 @@ export const PLANS: Record<PlanId, Plan> = {
     id: "pro",
     name: "Plan Pro",
     price: 29,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID, // Ensure this is in your .env
     limits: {
       turnosMonth: Infinity,
       multiBarberia: true,

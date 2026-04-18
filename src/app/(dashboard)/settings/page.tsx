@@ -16,14 +16,10 @@ import {
   MapPin, 
   CheckCircle2,
   Clock,
-  Zap,
   ShieldCheck,
-  History,
   Layout,
   Bell,
-  Lock,
-  ChevronRight,
-  ExternalLink
+  Lock
 } from "lucide-react";
 
 const DIAS = [
@@ -43,9 +39,7 @@ const DEFAULT_HORARIOS = DIAS.reduce((acc, dia) => ({
 
 export default function SettingsPage() {
   const { barberia, refresh } = useBarberia();
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [stripeLoading, setStripeLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState("general"); // general, horarios, plan
 
@@ -96,31 +90,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleUpgrade = async () => {
-    if (!barberia || !user) return;
-    setStripeLoading(true);
-    try {
-      const response = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          barberiaId: barberia.id,
-          userId: user.uid,
-          email: user.email,
-          planId: "pro",
-        }),
-      });
-
-      const { url, error } = await response.json();
-      if (error) throw new Error(error);
-      if (url) window.location.href = url;
-    } catch (error) {
-      console.error("Stripe Error:", error);
-      alert("Error al iniciar el pago. Por favor, inténtalo de nuevo.");
-    } finally {
-      setStripeLoading(false);
-    }
-  };
 
   const updateHorario = (diaId: string, field: string, value: any) => {
     setHorarios({
@@ -161,7 +130,7 @@ export default function SettingsPage() {
               activeTab === "plan" ? "bg-white/[0.08] text-white shadow-soft" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <CreditCard size={14} /> Facturación
+            <CreditCard size={14} /> Suscripción
           </button>
         </div>
       </div>
@@ -171,7 +140,7 @@ export default function SettingsPage() {
         <div className="hidden lg:block lg:col-span-3 space-y-1">
           <button className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'general' ? 'bg-white/[0.05] text-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'}`} onClick={() => setActiveTab('general')}>General</button>
           <button className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'horarios' ? 'bg-white/[0.05] text-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'}`} onClick={() => setActiveTab('horarios')}>Horarios de atención</button>
-          <button className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'plan' ? 'bg-white/[0.05] text-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'}`} onClick={() => setActiveTab('plan')}>Suscripción y facturación</button>
+          <button className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'plan' ? 'bg-white/[0.05] text-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'}`} onClick={() => setActiveTab('plan')}>Suscripción</button>
           <div className="pt-4 mt-4 border-t border-white/[0.05]">
             <button className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] flex items-center justify-between group">
               Notificaciones
@@ -358,138 +327,48 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {activeTab === "plan" && (
+              {activeTab === "plan" && (
             <div className="space-y-8 animate-in fade-in duration-500">
-              {/* Current Plan Card */}
-              <div className="glass p-8 rounded-2xl border-white/[0.08] flex flex-col md:row items-center justify-between gap-8 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none">
+              <div className="glass p-8 rounded-2xl border-white/[0.08] relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-10 opacity-[0.03] transition-opacity pointer-events-none">
                   <CreditCard size={180} />
                 </div>
-                <div className="flex items-center gap-6 relative z-10">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border ${
-                    barberia?.plan === 'pro' 
-                      ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' 
-                      : 'bg-white/[0.03] text-zinc-500 border-white/[0.08]'
-                  }`}>
-                    {barberia?.plan === 'pro' ? <Zap size={28} className="fill-black" /> : <ShieldCheck size={28} />}
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-1">Suscripción Actual</p>
-                    <h3 className="text-3xl font-bold text-white tracking-tight">
-                      {barberia?.plan === 'pro' ? 'Plan Pro' : 'Plan Gratis'}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Estado Activo</p>
+                <div className="relative z-10 space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border ${
+                      barberia?.plan === 'pro' 
+                        ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' 
+                        : 'bg-white/[0.03] text-zinc-500 border-white/[0.08]'
+                    }`}>
+                      <ShieldCheck size={28} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-1">Estado de suscripción</p>
+                      <h3 className="text-3xl font-bold text-white tracking-tight">
+                        {barberia?.plan === 'pro' ? 'Plan Pro' : barberia?.plan === 'trial' ? 'Trial gratuito' : 'Plan Gratis'}
+                      </h3>
+                      <p className="text-sm text-zinc-400 mt-2">
+                        {barberia?.plan === 'pro'
+                          ? 'Tu cuenta está activa con acceso completo.'
+                          : barberia?.plan === 'trial'
+                          ? 'Estás en el período de prueba de 7 días. Al expirar, solo podrás activar la cuenta en /activate.'
+                          : 'Tu suscripción actual no es PRO. Activa tu cuenta en /activate.'
+                        }
+                      </p>
                     </div>
                   </div>
-                </div>
-                
-                {barberia?.plan === 'free' && (
-                  <button 
-                    onClick={handleUpgrade}
-                    disabled={stripeLoading}
-                    className="relative z-10 bg-white text-black px-10 py-3 rounded-xl font-bold uppercase tracking-widest text-[11px] hover:scale-105 active:scale-95 transition-all shadow-soft flex items-center gap-2"
-                  >
-                    {stripeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap size={16} className="fill-black" />}
-                    Mejorar a Pro
-                  </button>
-                )}
-              </div>
-
-              {/* Pricing Grid */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className={`glass p-8 rounded-2xl border-white/[0.08] space-y-8 relative flex flex-col ${
-                  barberia?.plan === 'free' ? 'border-white/20' : 'opacity-60'
-                }`}>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold text-white uppercase tracking-tight">Gratis</h3>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-bold text-white">$0</span>
-                      <span className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest">/ mes</span>
-                    </div>
+                  <div className="rounded-3xl border border-white/[0.05] bg-white/[0.03] p-6">
+                    <p className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">Acceso</p>
+                    <p className="text-sm text-zinc-300 leading-7">
+                      Este sistema no usa Stripe ni pagos automáticos. La activación se hace manualmente con un código enviado por el admin.
+                    </p>
                   </div>
-
-                  <ul className="space-y-4 flex-1">
-                    {[
-                      "Hasta 5 días de prueba", 
-                      "Página de reservas pública", 
-                      "Gestión de servicios", 
-                      "Analíticas básicas"
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-center gap-3 text-[11px] font-medium text-zinc-400">
-                        <CheckCircle2 size={14} className="text-zinc-600" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  {barberia?.plan === 'free' && (
-                    <div className="pt-4 border-t border-white/[0.05] text-center text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                      Plan Actual
-                    </div>
-                  )}
-                </div>
-
-                <div className={`glass p-8 rounded-2xl border-white/[0.08] bg-white/[0.01] space-y-8 relative flex flex-col ${
-                  barberia?.plan === 'pro' ? 'border-white/40 shadow-glow' : 'hover:border-white/20'
-                }`}>
-                  <div className="absolute top-0 right-0 bg-white text-black px-4 py-1.5 font-bold uppercase tracking-widest text-[9px] rounded-bl-xl">
-                    Más Popular
+                  <div className="rounded-3xl border border-white/[0.05] bg-white/[0.03] p-6">
+                    <p className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">Si tu trial expira</p>
+                    <p className="text-sm text-zinc-300 leading-7">
+                      El dashboard se bloqueará y solo podrás ingresar a <span className="font-semibold text-white">/activate</span> para validar tu código.
+                    </p>
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold text-white uppercase tracking-tight">Pro</h3>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-bold text-white">$29</span>
-                      <span className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest">/ mes</span>
-                    </div>
-                  </div>
-
-                  <ul className="space-y-4 flex-1">
-                    {[
-                      "Turnos ilimitados", 
-                      "Dashboard de analíticas", 
-                      "Marca personalizada",
-                      "Herramientas CRM para clientes"
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-center gap-3 text-[11px] font-bold text-white">
-                        <CheckCircle2 size={14} className="text-white" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-
-                  {barberia?.plan !== 'pro' ? (
-                    <button 
-                      onClick={handleUpgrade}
-                      disabled={stripeLoading}
-                      className="block w-full text-center bg-white text-black py-3 rounded-xl font-bold uppercase tracking-widest text-[11px] hover:scale-105 transition-all shadow-soft"
-                    >
-                      {stripeLoading ? "Cargando..." : "Empezar Ahora"}
-                    </button>
-                  ) : (
-                    <div className="pt-4 border-t border-white/[0.05] text-center text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
-                      Suscripción Activa
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Billing Portal Link */}
-              <div className="glass p-6 rounded-2xl border-white/[0.05] flex items-center gap-6 group hover:bg-white/[0.02] transition-all">
-                <div className="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-zinc-500 group-hover:text-white transition-colors">
-                  <History size={20} />
-                </div>
-                <div className="flex-1 flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-sm text-white tracking-tight">Gestión de Facturación</h4>
-                    <p className="text-zinc-500 text-[11px] font-medium mt-0.5">Gestiona tus facturas, métodos de pago y detalles de facturación.</p>
-                  </div>
-                  <button 
-                    disabled={barberia?.plan !== 'pro'}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-zinc-400 border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05] hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    Abrir Portal
-                    <ExternalLink size={12} />
-                  </button>
                 </div>
               </div>
             </div>

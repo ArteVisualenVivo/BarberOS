@@ -121,7 +121,7 @@ export default function SaaSControlAdmin() {
             </div>
             <div>
               <h1 className="text-3xl font-black tracking-tight uppercase">SaaSControl <span className="text-emerald-500">Admin</span></h1>
-              <p className="text-zinc-500 font-bold text-xs uppercase tracking-[0.2em] mt-1">Stripe Casero • Panel Central de Licencias</p>
+              <p className="text-zinc-500 font-bold text-xs uppercase tracking-[0.2em] mt-1">Panel Central de Licencias</p>
             </div>
           </div>
           

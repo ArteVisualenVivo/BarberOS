@@ -87,7 +87,7 @@ export default function ActivatePage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
             <ShieldCheck className="w-8 h-8" />
           </div>
-          <h1 className="text-4xl font-black uppercase tracking-tight">Cuenta no activada</h1>
+          <h1 className="text-4xl font-black uppercase tracking-tight">ACTIVA TU CUENTA</h1>
           <p className="mt-3 text-sm text-zinc-400">
             Para usar BarberOS necesitas solicitar activación al admin y luego ingresar el código que te envíen.
           </p>
@@ -153,7 +153,7 @@ export default function ActivatePage() {
                 disabled={status === "loading"}
                 className="w-full rounded-3xl bg-white px-6 py-4 text-sm font-bold uppercase tracking-[0.2em] text-black transition hover:bg-zinc-200 disabled:opacity-50"
               >
-                {status === "loading" ? <Loader2 className="mx-auto h-5 w-5 animate-spin text-black" /> : "Activar"}
+                {status === "loading" ? <Loader2 className="mx-auto h-5 w-5 animate-spin text-black" /> : "Validar código"}
               </button>
             </form>
           </div>
