@@ -1,33 +1,95 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Reset básico */ 
-* { 
-  margin: 0; 
-  padding: 0; 
-  box-sizing: border-box; 
-} 
+@theme {
+  --color-background: #050505;
+  --color-card: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-primary: #ffffff;
+  --color-secondary: #a1a1aa;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+}
 
-/* Base */ 
-html, body { 
-  height: 100%; 
-  background: #000000; 
-  color: white; 
-  font-family: system-ui, sans-serif; 
-} 
+:root {
+  --background: #050505;
+  --foreground: #ffffff;
+}
 
-/* Scrollbar styling */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.011em;
+  margin: 0;
+  padding: 0;
+}
+
+/* SaaS Component Styles */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Linear-style shadows & borders */
+.shadow-soft {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.shadow-glow {
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.02);
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #000;
+  background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #222;
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #333;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Animations */
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+/* Stripe Typography */
+h1, h2, h3, h4 {
+  letter-spacing: -0.02em;
+}
+
+.text-subtle {
+  color: #71717a;
+}
+
+/* Clean Input Styles */
+input, select, textarea {
+  transition: all 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
