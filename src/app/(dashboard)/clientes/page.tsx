@@ -2,7 +2,7 @@
 
 import { useBarberia } from "@/hooks/useBarberia";
 import { useEffect, useState } from "react";
-import { getTenantCollection, COLLECTIONS } from "@/lib/db";
+import { getTenantCollection, addTenantDoc, COLLECTIONS } from "@/lib/db";
 import { 
   Users, 
   Search, 
@@ -25,6 +25,11 @@ export default function ClientesAdmin() {
   const [clientes, setClientes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  const [newClienteNombre, setNewClienteNombre] = useState("");
+  const [newClienteWhatsapp, setNewClienteWhatsapp] = useState("");
+  const [savingCliente, setSavingCliente] = useState(false);
+  const [clientError, setClientError] = useState("");
 
   useEffect(() => {
     if (barberia) {
@@ -57,6 +62,36 @@ export default function ClientesAdmin() {
     c.whatsapp.includes(searchTerm)
   );
 
+  const handleAddCliente = async () => {
+    if (!barberia) return;
+    if (!newClienteNombre.trim() || !newClienteWhatsapp.trim()) {
+      setClientError("Completa el nombre y el teléfono del cliente.");
+      return;
+    }
+
+    setClientError("");
+    setSavingCliente(true);
+
+    try {
+      await addTenantDoc(COLLECTIONS.CLIENTES, {
+        barberiaId: barberia.id,
+        nombre: newClienteNombre.trim(),
+        whatsapp: newClienteWhatsapp.trim(),
+        lastVisit: new Date(),
+      });
+
+      setNewClienteNombre("");
+      setNewClienteWhatsapp("");
+      setIsAddFormOpen(false);
+      fetchClientes();
+    } catch (error) {
+      console.error("Error agregando cliente:", error);
+      setClientError("No se pudo guardar el cliente. Intenta nuevamente.");
+    } finally {
+      setSavingCliente(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -67,12 +102,74 @@ export default function ClientesAdmin() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 bg-white text-black px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-zinc-200 transition-all shadow-soft group">
+          <button
+            onClick={() => setIsAddFormOpen((prev) => !prev)}
+            className="flex items-center gap-2 bg-white text-black px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-zinc-200 transition-all shadow-soft group"
+          >
             <Plus size={16} />
-            <span>Añadir Cliente</span>
+            <span>{isAddFormOpen ? "Cerrar" : "Añadir Cliente"}</span>
           </button>
         </div>
       </div>
+
+      {isAddFormOpen && (
+        <div className="glass rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+          <div className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-white">Crear nuevo cliente</h2>
+              <p className="text-sm text-zinc-400 mt-1">Agrega un cliente a tu barbería y registra su contacto en Firestore.</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Nombre</label>
+                <input
+                  type="text"
+                  value={newClienteNombre}
+                  onChange={(e) => setNewClienteNombre(e.target.value)}
+                  placeholder="Nombre del cliente"
+                  className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">WhatsApp</label>
+                <input
+                  type="tel"
+                  value={newClienteWhatsapp}
+                  onChange={(e) => setNewClienteWhatsapp(e.target.value)}
+                  placeholder="5493512417121"
+                  className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                />
+              </div>
+            </div>
+
+            {clientError && (
+              <div className="rounded-3xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-sm text-rose-200">
+                {clientError}
+              </div>
+            )}
+
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <button
+                onClick={handleAddCliente}
+                disabled={savingCliente}
+                className="w-full md:w-auto rounded-3xl bg-emerald-500 px-6 py-4 text-sm font-bold uppercase tracking-[0.2em] text-black transition hover:bg-emerald-400 disabled:opacity-50"
+              >
+                {savingCliente ? "Guardando..." : "Guardar cliente"}
+              </button>
+              <button
+                onClick={() => {
+                  setIsAddFormOpen(false);
+                  setClientError("");
+                }}
+                className="w-full md:w-auto rounded-3xl border border-white/10 bg-white/5 px-6 py-4 text-sm font-bold uppercase tracking-[0.2em] text-white transition hover:border-white/20"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

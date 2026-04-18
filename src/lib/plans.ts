@@ -17,7 +17,7 @@ export const PLANS: Record<PlanId, Plan> = {
     name: "Trial 7 días",
     price: 0,
     limits: {
-      turnosMonth: 20,
+      turnosMonth: Infinity,
       multiBarberia: false,
     },
   },
