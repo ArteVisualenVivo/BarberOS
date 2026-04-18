@@ -28,6 +28,7 @@ function ReservaContent({ params }: { params: { slug: string } }) {
   const [step, setStep] = useState(1);
   const [servicio, setServicio] = useState<any>(null);
   const [barberia, setBarberia] = useState<Barberia | null>(null);
+  const [notFound, setNotFound] = useState(false);
   
   // Form states
   const [fecha, setFecha] = useState(new Date().toLocaleDateString("en-CA"));
@@ -50,7 +51,7 @@ function ReservaContent({ params }: { params: { slug: string } }) {
   const fetchInitialData = async () => {
     try {
       const b = await getBarberiaBySlug(params.slug);
-      if (b) {
+      if (b && b.id) {
         setBarberia(b);
         if (servicioId) {
           const sSnap = await getDoc(doc(db, "servicios", servicioId));
@@ -58,9 +59,12 @@ function ReservaContent({ params }: { params: { slug: string } }) {
             setServicio({ id: sSnap.id, ...sSnap.data() });
           }
         }
+      } else {
+        setNotFound(true);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+      setNotFound(true);
     } finally {
       setLoading(false);
     }
@@ -148,7 +152,22 @@ function ReservaContent({ params }: { params: { slug: string } }) {
     );
   }
 
-  if (!barberia || !servicio) {
+  if (notFound) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center p-6 space-y-6">
+        <Scissors className="text-red-500 w-16 h-16" />
+        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Barbería no encontrada</h1>
+        <p className="text-gray-500 max-w-xs mx-auto">El slug especificado no coincide con ninguna barbería registrada.</p>
+        <button onClick={() => router.back()} className="bg-primary text-black px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest">Volver</button>
+      </div>
+    );
+  }
+
+  if (!barberia || !barberia.id) {
+    return <div>Error: barbería no cargada</div>;
+  }
+
+  if (!servicio) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center p-6 space-y-6">
         <Scissors className="text-red-500 w-16 h-16" />
