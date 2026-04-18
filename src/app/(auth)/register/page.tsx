@@ -48,9 +48,12 @@ export default function RegisterPage() {
         plan: "trial",
         trialStartAt: Timestamp.fromDate(trialStartAt),
         trialDays,
-        subscriptionStatus: "inactive",
+        subscriptionStatus: "trial",
         trialExpired: false,
         licenseCode: "",
+        licenseStartAt: null,
+        licenseDurationDays: 0,
+        licenseExpiresAt: null,
         createdAt: serverTimestamp(),
       });
 

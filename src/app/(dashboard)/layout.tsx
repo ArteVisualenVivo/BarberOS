@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useBarberia } from "@/hooks/useBarberia";
-import { isTrialExpired } from "@/lib/tenants";
+import { hasDashboardAccess } from "@/lib/tenants";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !barberiaLoading && barberia && barberia.plan !== "pro" && isTrialExpired(barberia)) {
+    if (!loading && !barberiaLoading && barberia && !hasDashboardAccess(barberia)) {
       router.push("/activate");
     }
   }, [loading, barberiaLoading, barberia, router]);
@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!user) return null;
 
-  if (barberia && barberia.plan !== "pro" && isTrialExpired(barberia)) {
+  if (barberia && !hasDashboardAccess(barberia)) {
     return null;
   }
 

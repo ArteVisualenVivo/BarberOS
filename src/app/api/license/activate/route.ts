@@ -28,10 +28,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 400 });
     }
 
+    const now = new Date();
+    const expiresAt = new Date(now);
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
     await db.collection("barberias").doc(barberiaId).update({
       plan: "pro",
       subscriptionStatus: "active",
       licenseCode: code,
+      licenseStartAt: now,
+      licenseDurationDays: 30,
+      licenseExpiresAt: expiresAt,
       trialExpired: true,
     });
 

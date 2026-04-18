@@ -87,13 +87,9 @@ export default function ActivatePage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
             <ShieldCheck className="w-8 h-8" />
           </div>
-          <h1 className="text-4xl font-black uppercase tracking-tight">ACTIVA TU CUENTA</h1>
-          <p className="mt-3 text-sm text-zinc-400">
-            Para usar BarberOS necesitas solicitar activación al admin y luego ingresar el código que te envíen.
-          </p>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+            <h1 className="text-4xl font-black uppercase tracking-tight">TU PRUEBA HA FINALIZADO</h1>
+            <p className="mt-3 text-sm text-zinc-400">
+              Para continuar usando BarberOS, solicita activación por WhatsApp y valida el código que te envíe el admin.
           <div className="space-y-6 rounded-[28px] border border-white/10 bg-white/5 p-8">
             <div className="space-y-3">
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-400">¿Qué hacer?</p>
@@ -153,7 +149,7 @@ export default function ActivatePage() {
                 disabled={status === "loading"}
                 className="w-full rounded-3xl bg-white px-6 py-4 text-sm font-bold uppercase tracking-[0.2em] text-black transition hover:bg-zinc-200 disabled:opacity-50"
               >
-                {status === "loading" ? <Loader2 className="mx-auto h-5 w-5 animate-spin text-black" /> : "Validar código"}
+                {status === "loading" ? <Loader2 className="mx-auto h-5 w-5 animate-spin text-black" /> : "Activar cuenta"}
               </button>
             </form>
           </div>

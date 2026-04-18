@@ -18,8 +18,11 @@ export interface Barberia {
   trialStartAt?: any;
   trialDays?: number;
   trialExpired?: boolean;
-  subscriptionStatus?: "inactive" | "active";
+  subscriptionStatus?: "trial" | "inactive" | "active";
   licenseCode?: string;
+  licenseStartAt?: any;
+  licenseDurationDays?: number;
+  licenseExpiresAt?: any;
   horarios?: Record<string, HorarioDia>;
   logoUrl?: string;
   descripcion?: string;
@@ -27,21 +30,54 @@ export interface Barberia {
   direccion?: string;
 }
 
+const toDate = (value: any): Date | null => {
+  if (!value) return null;
+  if (typeof value.toDate === "function") return value.toDate();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 export function isTrialExpired(barberia: Barberia): boolean {
-  if (barberia.plan === "pro") return false;
+  if (barberia.plan !== "trial") return false;
   if (barberia.trialExpired) return true;
   if (!barberia.trialStartAt || !barberia.trialDays) return true;
 
-  const startDate = typeof barberia.trialStartAt?.toDate === "function"
-    ? barberia.trialStartAt.toDate()
-    : new Date(barberia.trialStartAt);
-
-  if (Number.isNaN(startDate.getTime())) return true;
+  const startDate = toDate(barberia.trialStartAt);
+  if (!startDate) return true;
 
   const expiresAt = new Date(startDate);
   expiresAt.setDate(expiresAt.getDate() + barberia.trialDays);
 
   return new Date() >= expiresAt;
+}
+
+export function hasActiveTrial(barberia: Barberia): boolean {
+  if (barberia.plan !== "trial") return false;
+  if (barberia.trialExpired) return false;
+  if (!barberia.trialStartAt || !barberia.trialDays) return false;
+
+  const startDate = toDate(barberia.trialStartAt);
+  if (!startDate) return false;
+
+  const expiresAt = new Date(startDate);
+  expiresAt.setDate(expiresAt.getDate() + barberia.trialDays);
+
+  return new Date() < expiresAt;
+}
+
+export function hasActiveProLicense(barberia: Barberia): boolean {
+  if (barberia.plan !== "pro") return false;
+  if (barberia.subscriptionStatus !== "active") return false;
+  if (!barberia.licenseExpiresAt) return false;
+
+  const expiresAt = toDate(barberia.licenseExpiresAt);
+  if (!expiresAt) return false;
+
+  return new Date() < expiresAt;
+}
+
+export function hasDashboardAccess(barberia: Barberia): boolean {
+  return hasActiveTrial(barberia) || hasActiveProLicense(barberia);
 }
 
 export async function getBarberiaBySlug(slug: string): Promise<Barberia | null> {
