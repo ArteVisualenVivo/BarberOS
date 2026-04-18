@@ -369,6 +369,24 @@ export default function SettingsPage() {
                       El dashboard se bloqueará y solo podrás ingresar a <span className="font-semibold text-white">/activate</span> para validar tu código.
                     </p>
                   </div>
+                  {process.env.NODE_ENV === "development" && (
+                    <button
+                      onClick={() => {
+                        localStorage.setItem("force_trial_expired", "true");
+                        window.location.href = "/activate";
+                      }}
+                      style={{
+                        background: "red",
+                        color: "white",
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        marginTop: "20px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      🔥 FORZAR EXPIRACIÓN TRIAL (DEV ONLY)
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
