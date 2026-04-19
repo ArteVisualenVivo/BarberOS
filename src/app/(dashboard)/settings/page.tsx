@@ -80,10 +80,18 @@ export default function SettingsPage() {
     setLoading(true);
 
     try {
-      const normalizedSlug = generateSlug(formData.slug || formData.nombre || "");
+      const slugFinal = (formData.slug || formData.nombre)
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-");
+
       await updateDoc(doc(db, "barberias", barberia.id), {
-        ...formData,
-        slug: normalizedSlug,
+        nombre: formData.nombre,
+        descripcion: formData.descripcion,
+        telefono: formData.telefono,
+        direccion: formData.direccion,
+        logoUrl: formData.logoUrl,
+        slug: slugFinal,
         horarios
       });
       setSuccess(true);
