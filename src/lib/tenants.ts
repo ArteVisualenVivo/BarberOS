@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { collection, query, where, getDocs, limit, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { PlanId } from "./plans";
 
 export interface HorarioDia {
@@ -86,43 +86,27 @@ export function hasDashboardAccess(barberia: Barberia): boolean {
   return hasActiveTrial(barberia) || hasActiveProLicense(barberia);
 }
 
-const normalizeSlug = (value: string) => {
-  return value?.toLowerCase().trim().replace(/\s+/g, "-") || "";
-};
-
-export async function getBarberiaBySlug(slug: string): Promise<Barberia | null> {
+export async function getBarberiaBySlug(slug: string) {
   if (!slug) return null;
 
-  const q = query(collection(db, "barberias"), where("slug", "==", slug), limit(1));
-  const querySnapshot = await getDocs(q);
+  const snapshot = await getDocs(collection(db, "barberias"));
 
-  if (!querySnapshot.empty) {
-    const docSnap = querySnapshot.docs[0];
+  const normalizedSlug = slug.toLowerCase().trim();
+
+  for (const docSnap of snapshot.docs) {
     const data = docSnap.data();
 
-    if ((!data.slug || data.slug === "") && data.nombre) {
-      const generatedSlug = normalizeSlug(data.nombre);
-      if (generatedSlug) {
-        await updateDoc(doc(db, "barberias", docSnap.id), { slug: generatedSlug });
-      }
-    }
+    const storedSlug = (data.slug || "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-");
 
-    return { id: docSnap.id, ...data } as Barberia;
-  }
-
-  const allSnapshot = await getDocs(collection(db, "barberias"));
-  const normalizedSearchSlug = slug.toLowerCase().trim();
-
-  for (const docSnap of allSnapshot.docs) {
-    const data = docSnap.data() as any;
-    const docSlug = data.slug?.toString() || "";
-    const generatedSlug = !docSlug && data.nombre ? normalizeSlug(data.nombre) : docSlug;
-
-    if (generatedSlug.toLowerCase() === normalizedSearchSlug) {
-      if (!data.slug && generatedSlug) {
-        await updateDoc(doc(db, "barberias", docSnap.id), { slug: generatedSlug });
-      }
-      return { id: docSnap.id, ...data, slug: generatedSlug } as Barberia;
+    if (storedSlug === normalizedSlug) {
+      return {
+        id: docSnap.id,
+        ...data,
+        slug: storedSlug,
+      };
     }
   }
 
