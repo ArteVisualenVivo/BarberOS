@@ -54,6 +54,10 @@ export default function SettingsPage() {
 
   const [horarios, setHorarios] = useState<any>(DEFAULT_HORARIOS);
 
+  const generateSlug = (value: string) => {
+    return value.toLowerCase().trim().replace(/\s+/g, "-");
+  };
+
   useEffect(() => {
     if (barberia) {
       setFormData({
@@ -76,8 +80,10 @@ export default function SettingsPage() {
     setLoading(true);
 
     try {
+      const normalizedSlug = generateSlug(formData.slug || formData.nombre || "");
       await updateDoc(doc(db, "barberias", barberia.id), {
         ...formData,
+        slug: normalizedSlug,
         horarios
       });
       setSuccess(true);
@@ -186,7 +192,7 @@ export default function SettingsPage() {
                           required
                           className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 pl-20 text-sm text-white focus:bg-white/[0.05] transition-all"
                           value={formData.slug}
-                          onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s/g, '-') })}
+                          onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().trim().replace(/\s+/g, '-') })}
                         />
                       </div>
                     </div>
