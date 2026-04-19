@@ -104,8 +104,12 @@ export async function getBarberiaBySlug(slug: string) {
     if (storedSlug === normalizedSlug) {
       return {
         id: docSnap.id,
-        ...data,
+        nombre: data.nombre || "",
+        ownerId: data.ownerId || "",
+        plan: data.plan || "trial",
+        createdAt: data.createdAt || null,
         slug: storedSlug,
+        ...data
       };
     }
   }
