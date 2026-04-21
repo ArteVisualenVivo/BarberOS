@@ -1,34 +1,43 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getBarberiasByOwner, Barberia } from "@/lib/tenants";
-import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from "react";
+import { getBarberiasByOwner } from "@/lib/tenants";
+import { getCurrentUser, authReadyPromise } from "@/lib/auth";
 
 export const useBarberia = () => {
-  const { user } = useAuth();
-  const [barberia, setBarberia] = useState<Barberia | null>(null);
+  const [barberia, setBarberia] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchBarberia = async () => {
-    if (user) {
-      console.log("DEBUG useBarberia: Fetching for user:", user.uid);
-      const barberias = await getBarberiasByOwner(user.uid);
-      console.log("DEBUG useBarberia: Found barberias:", barberias);
-      if (barberias.length > 0) {
-        console.log("DEBUG useBarberia: Setting barberia:", barberias[0]);
-        setBarberia(barberias[0]);
-      } else {
-        console.log("DEBUG useBarberia: No barberias found");
-      }
-    } else {
-      console.log("DEBUG useBarberia: No user");
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchBarberia();
-  }, [user]);
+    let active = true;
 
-  return { barberia, loading, refresh: fetchBarberia };
+    const load = async () => {
+      setLoading(true);
+
+      // 🔑 Espera REAL a Firebase Auth
+      await authReadyPromise;
+
+      const user = getCurrentUser();
+
+      if (!user?.uid) {
+        setLoading(false);
+        return;
+      }
+
+      const data = await getBarberiasByOwner(user.uid);
+
+      if (!active) return;
+
+      setBarberia(data?.[0] || null);
+      setLoading(false);
+    };
+
+    load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return { barberia, loading };
 };

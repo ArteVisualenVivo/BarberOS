@@ -1,71 +1,97 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
 
-const LICENSE_CODE_REGEX = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { code, barberiaId } = body;
 
+    console.log("[ACTIVATE] code:", code);
+    console.log("[ACTIVATE] barberiaId:", barberiaId);
+
     if (!code || !barberiaId) {
-      return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "missing_data" },
+        { status: 400 }
+      );
     }
 
     const normalizedCode = String(code).toUpperCase().trim();
-    if (!LICENSE_CODE_REGEX.test(normalizedCode)) {
-      return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 400 });
-    }
 
     const licenseRef = db.collection("licenses").doc(normalizedCode);
     const licenseSnap = await licenseRef.get();
 
-    console.log("BUSCANDO LICENSE:", normalizedCode);
-    console.log("EXISTS:", licenseSnap.exists);
+    console.log("[ACTIVATE] exists:", licenseSnap.exists);
 
     if (!licenseSnap.exists) {
-      const all = await db.collection("licenses").get();
-      console.log("TODAS LAS LICENSES:", all.docs.map(d => d.id));
-      return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "invalid_code" },
+        { status: 400 }
+      );
     }
 
-    const licenseData = licenseSnap.data();
-    const status = String(licenseData?.status || "").trim().toLowerCase();
-    const used =
-      licenseData?.used === true ||
-      String(licenseData?.used || "").trim().toLowerCase() === "true";
-    const rawAppId = licenseData?.appId || licenseData?.project || "";
-    const appId = String(rawAppId).trim().toLowerCase().replace(/\s+/g, "");
+    const license = licenseSnap.data();
+    console.log("[ACTIVATE] data:", license);
 
-    const expiresAtField = licenseData?.expiresAt;
-    const expiresAt = expiresAtField
-      ? expiresAtField.toDate
-        ? expiresAtField.toDate()
-        : new Date(expiresAtField)
-      : null;
-    const now = new Date();
-
-    if (
-      status !== "active" ||
-      used ||
-      appId !== "barberos" ||
-      !expiresAt ||
-      now >= expiresAt
-    ) {
-      return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 400 });
+    if (!license) {
+      return NextResponse.json(
+        { ok: false, error: "invalid_code" },
+        { status: 400 }
+      );
     }
 
+    // Validación status (si existe)
+    if (license.status && license.status !== "active") {
+      return NextResponse.json(
+        { ok: false, error: "invalid_code" },
+        { status: 400 }
+      );
+    }
+
+    // Validación expiresAt segura
+    if (license.expiresAt) {
+      let expiresDate: Date | null = null;
+
+      if (typeof license.expiresAt?.toDate === "function") {
+        expiresDate = license.expiresAt.toDate();
+      } else if (license.expiresAt instanceof Date) {
+        expiresDate = license.expiresAt;
+      } else if (typeof license.expiresAt === "number") {
+        expiresDate = new Date(license.expiresAt);
+      } else if (typeof license.expiresAt === "string") {
+        expiresDate = new Date(license.expiresAt);
+      }
+
+      if (expiresDate && expiresDate.getTime() < Date.now()) {
+        return NextResponse.json(
+          { ok: false, error: "expired_license" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Activación (actualiza barbería)
     await db.collection("barberias").doc(barberiaId).update({
-      plan: "pro",
+      licenseCode: normalizedCode,
       subscriptionStatus: "active",
+      activatedAt: new Date(),
     });
 
-    await licenseRef.update({
-      used: true,
+    return NextResponse.json({
+      ok: true,
+      message: "License activated successfully",
     });
 
-    return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 500 });
+  } catch (error: any) {
+    console.error("[ACTIVATE ERROR FULL]:", error);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "server_error",
+        message: error?.message || "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }
