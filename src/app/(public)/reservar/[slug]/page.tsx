@@ -124,7 +124,6 @@ function ReservaContent({ slug }: { slug: string }) {
       "bigote",
     ].some((keyword) => normalized.includes(keyword));
   };
-  };
 
   const serviciosFiltrados = serviciosSafe.filter((servicio) => {
     if (publicoFiltro === "todos") return true;
