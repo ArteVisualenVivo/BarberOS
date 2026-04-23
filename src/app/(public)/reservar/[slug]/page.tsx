@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, Suspense, use } from "react";
 import { getBarberiaBySlug, Barberia } from "@/lib/tenants";
@@ -78,7 +78,20 @@ function ReservaContent({ slug }: { slug: string }) {
   const totalPrecio = serviciosSeleccionadosSafe.reduce((total, servicio) => total + (Number(servicio.precio) || 0), 0);
   const totalDuracion = serviciosSeleccionadosSafe.reduce((total, servicio) => total + (Number(servicio.duracion) || 0), 0);
 
+  const servicioEsUnisex = (nombre: string) => {
+    const normalized = nombre.toLowerCase();
+    return [
+      "corte",
+      "lavado",
+      "peinado",
+      "brushing",
+      "tratamiento capilar",
+      "masaje capilar",
+    ].some((keyword) => normalized.includes(keyword));
+  };
+
   const servicioEsParaMujer = (nombre: string) => {
+    if (servicioEsUnisex(nombre)) return true;
     const normalized = nombre.toLowerCase();
     return [
       "uñas",
@@ -100,16 +113,17 @@ function ReservaContent({ slug }: { slug: string }) {
   };
 
   const servicioEsParaHombre = (nombre: string) => {
+    if (servicioEsUnisex(nombre)) return true;
     const normalized = nombre.toLowerCase();
     return [
       "barba",
       "afeitado",
-      "corte",
       "degradado",
       "fade",
       "perfilado de barba",
       "bigote",
     ].some((keyword) => normalized.includes(keyword));
+  };
   };
 
   const serviciosFiltrados = serviciosSafe.filter((servicio) => {
