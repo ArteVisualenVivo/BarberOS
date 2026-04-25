@@ -62,8 +62,31 @@ export default function RegisterPage() {
         barberiaId: barberiaRef.id,
       });
 
-      // Redirigir al dashboard
-      router.push("/dashboard");
+      // Redirección basada en trial/subscription
+      try {
+        const trialStartMs =
+          trialStartAt && typeof trialStartAt.getTime === "function"
+            ? trialStartAt.getTime()
+            : Number(new Date(trialStartAt));
+
+        const trialDaysNumber = Number(trialDays) || 7;
+        const trialEndsMs = trialStartMs + trialDaysNumber * 24 * 60 * 60 * 1000;
+
+        const now = Date.now();
+
+        const hasValidTrial = Number.isFinite(trialStartMs) && now < trialEndsMs;
+
+        const hasActiveSubscription = false; // newly created barbería starts on trial
+
+        if (hasActiveSubscription || hasValidTrial) {
+          router.push("/dashboard");
+        } else {
+          router.push("/activate");
+        }
+      } catch (e) {
+        // Fallback: si algo falla, ir al dashboard para no bloquear la UX
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       console.error("Error completo de registro:", err);
       
