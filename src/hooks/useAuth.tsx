@@ -31,18 +31,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Escuchar cambios en el estado de autenticación
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setLoading(true);
       try {
         setUser(currentUser);
 
         if (currentUser) {
-          // Si hay usuario, cargar sus datos de Firestore
-          const data = await getUserData(currentUser.uid);
-          setUserData(data);
+          // Si hay usuario autenticado, cargar sus datos de Firestore
+          try {
+            const data = await getUserData(currentUser.uid);
+            setUserData(data);
+          } catch (error) {
+            console.error("Error al cargar datos del usuario:", error);
+            setUserData(null);
+            // Opcional: mostrar error al usuario o redirigir
+          }
         } else {
           setUserData(null);
         }
       } catch (error) {
         console.error("Error en onAuthStateChanged:", error);
+        setUserData(null);
       } finally {
         setLoading(false);
       }

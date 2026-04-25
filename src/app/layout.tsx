@@ -4,6 +4,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 export const metadata = {
   title: "BarberOS - SaaS para Barberías",
   description: "La plataforma definitiva para gestionar tu barbería.",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
 export default function RootLayout({

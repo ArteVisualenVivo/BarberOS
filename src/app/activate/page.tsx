@@ -20,7 +20,14 @@ export default function ActivatePage() {
   const [error, setError] = useState("");
 
   const handleWhatsApp = () => {
-    const message = encodeURIComponent("Hola, quiero activar BarberOS");
+    const message = encodeURIComponent(
+      `Hola, quiero activar mi barbería/peluquería\n\n` +
+      `App ID: barberos\n` +
+      `Barbería: ${barberia?.nombre || "No definido"}\n` +
+      `Email: ${user?.email || "No definido"}\n` +
+      `Teléfono: ${barberia?.telefono || "No definido"}\n` +
+      `ID Barbería: ${barberia?.id || "No definido"}`
+    );
     window.open(`https://wa.me/5493512417121?text=${message}`, "_blank");
   };
 
@@ -52,9 +59,19 @@ export default function ActivatePage() {
 
       if (data.ok) {
         setStatus("success");
-        router.push("/dashboard");
+        setError("");
+        setTimeout(() => router.push("/dashboard"), 1500);
+      } else if (data.error === "license_already_used") {
+        setError("Licencia ya usada");
+        setStatus("error");
+      } else if (data.error === "license_not_found") {
+        setError("Código no encontrado");
+        setStatus("error");
+      } else if (data.error === "license_invalid") {
+        setError("Licencia inválida o expirada");
+        setStatus("error");
       } else {
-        setError(data.error === "invalid_code" ? "Código inválido o ya fue usado." : "Error al activar la licencia.");
+        setError("Error al activar la licencia");
         setStatus("error");
       }
     } catch (err) {
@@ -81,7 +98,7 @@ export default function ActivatePage() {
           </div>
           <h1 className="text-4xl font-black uppercase tracking-tight">TU PRUEBA HA FINALIZADO</h1>
           <p className="mt-3 text-sm text-zinc-400">
-            Para continuar usando BarberOS, solicita activación por WhatsApp y valida el código que te envíe el admin.
+            Para continuar usando tu barbería, solicita activación por WhatsApp y valida el código que te envíe el admin.
           </p>
         </div>
 
@@ -137,6 +154,12 @@ export default function ActivatePage() {
               {error && (
                 <div className="rounded-3xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-sm text-rose-200">
                   {error}
+                </div>
+              )}
+
+              {status === "success" && (
+                <div className="rounded-3xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-200">
+                  ✓ Activación OK
                 </div>
               )}
 

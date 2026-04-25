@@ -57,16 +57,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   const navItems = [
-    { name: "Resumen", href: "/dashboard", icon: <LayoutDashboard size={18} /> },
     { name: "Turnos", href: "/turnos", icon: <Calendar size={18} /> },
     { name: "Clientes", href: "/clientes", icon: <Users size={18} /> },
-    { name: "Configuración", href: "/settings", icon: <Settings size={18} /> },
+    { name: "Servicios", href: "/servicios", icon: <Plus size={18} /> },
+    { name: "Resumen", href: "/dashboard", icon: <LayoutDashboard size={18} /> },
+    { name: "Configuración del negocio", href: "/settings", icon: <Settings size={18} /> },
   ];
 
   const getPageTitle = () => {
     const item = navItems.find(item => item.href === pathname);
     return item ? item.name : "Dashboard";
   };
+
+  const isPro = barberia?.plan === "pro" || barberia?.plan === "PRO";
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-400 font-sans antialiased selection:bg-white/10 selection:text-white">
@@ -87,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 group-focus-within:text-white transition-colors" />
             <input 
               type="text" 
-              placeholder="Buscar..." 
+              placeholder="Buscar clientes o turnos…" 
               className="w-full bg-white/[0.03] border border-white/[0.05] rounded-lg py-2 pl-9 pr-3 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/10 focus:bg-white/[0.05] transition-all"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-white/10 bg-white/5 text-[10px] text-zinc-500 font-medium">
@@ -128,12 +131,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         <div className="p-4 border-t border-white/10 mt-auto">
+          <div className={`flex items-center justify-between px-3 py-2.5 mb-4 rounded-lg border text-[10px] font-bold transition-all ${
+            isPro
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+              : "bg-zinc-500/5 border-white/[0.05] text-zinc-400"
+          }`}>
+            <span>Licencia:</span>
+            <span className={isPro ? "text-emerald-400" : "text-zinc-500"}>
+              {isPro ? "PRO ACTIVADO ✔" : "FREE"}
+            </span>
+          </div>
+          
+          {isPro ? (
+            <div className="px-3 py-4 mb-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200">
+              <p className="text-xs font-bold text-emerald-300 mb-1">Plan PRO Activado ✔</p>
+              <p className="text-[10px] text-emerald-200/80">Todas las funciones premium habilitadas</p>
+            </div>
+          ) : (
+            <div className="px-3 py-3 mb-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+              <p className="text-[9px] text-zinc-500">
+                Activá PRO para reservas ilimitadas
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-zinc-800 to-zinc-700 border border-white/10 flex items-center justify-center text-xs font-bold text-white shadow-soft text-center uppercase">
               {userData?.nombre?.[0] || user.email?.[0] || "B"}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-white truncate">{userData?.nombre || "Barber"}</p>
+              <p className="text-xs font-bold text-white truncate">{barberia?.nombre || barberia?.name || "Mi Negocio"}</p>
               <p className="text-[10px] text-zinc-500 truncate">{user.email}</p>
             </div>
           </div>

@@ -26,7 +26,7 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      // 1. Crear usuario en Auth
+      // 1. Crear usuario en Auth y documento básico en Firestore
       const user = await registerUser(email, password);
 
       // 2. Generar slug para la barbería
@@ -57,10 +57,8 @@ export default function RegisterPage() {
         createdAt: serverTimestamp(),
       });
 
-      // 4. Guardar datos del usuario con el ID de su barbería
+      // 4. Actualizar datos del usuario con el ID de su barbería
       await createUserData(user.uid, {
-        email,
-        role: "owner",
         barberiaId: barberiaRef.id,
       });
 

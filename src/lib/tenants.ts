@@ -86,30 +86,49 @@ export function hasDashboardAccess(barberia: Barberia): boolean {
   return hasActiveTrial(barberia) || hasActiveProLicense(barberia);
 }
 
+function normalizeSlug(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/^-+|-+$/g, "");
+}
+
 export async function getBarberiaBySlug(slug: string) {
   if (!slug) return null;
 
-  const snapshot = await getDocs(collection(db, "barberias"));
+  const normalizedSlug = normalizeSlug(slug);
+  if (!normalizedSlug) return null;
 
-  const normalizedSlug = slug.toLowerCase().trim();
+  const q = query(
+    collection(db, "barberias"),
+    where("slug", "==", normalizedSlug)
+  );
+
+  let snapshot = await getDocs(q);
+
+  if (!snapshot || snapshot.empty) {
+    snapshot = await getDocs(collection(db, "barberias"));
+  }
+
+  if (!snapshot || snapshot.empty) return null;
 
   for (const docSnap of snapshot.docs) {
     const data = docSnap.data();
-
-    const storedSlug = (data.slug || "")
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-");
+    const storedSlug = normalizeSlug((data.slug || "").toString());
 
     if (storedSlug === normalizedSlug) {
       return {
         id: docSnap.id,
-        nombre: data.nombre || "",
-        ownerId: data.ownerId || "",
-        plan: data.plan || "trial",
-        createdAt: data.createdAt || null,
+        nombre: data.nombre ?? "",
+        ownerId: data.ownerId ?? "",
+        plan: data.plan ?? "",
+        createdAt: data.createdAt ?? null,
         slug: storedSlug,
-        ...data
+        ...data,
       };
     }
   }

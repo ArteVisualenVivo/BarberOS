@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { getBarberiaBySlug, Barberia } from "@/lib/tenants";
 import { getTenantCollection, COLLECTIONS } from "@/lib/db";
 import Link from "next/link";
 import ChatBot from "@/components/ChatBot";
-import { 
-  Scissors, 
-  Clock, 
-  ChevronRight, 
-  Loader2, 
-  MapPin, 
+import {
+  Scissors,
+  Clock,
+  ChevronRight,
+  Loader2,
+  MapPin,
   Phone,
   ShieldCheck,
   MessageCircle
@@ -31,7 +31,10 @@ interface Servicio {
   barberiaId: string;
 }
 
-export default function PublicBarberiaLanding({ params }: { params: { slug: string } }) {
+export default function PublicBarberiaLanding({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = use(params);
+  const slug = resolvedParams.slug;
+
   const [barberia, setBarberia] = useState<Barberia | null>(null);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,11 +42,11 @@ export default function PublicBarberiaLanding({ params }: { params: { slug: stri
 
   useEffect(() => {
     fetchData();
-  }, [params.slug]);
+  }, [slug]);
 
   const fetchData = async () => {
     try {
-      const b = await getBarberiaBySlug(params.slug);
+      const b = await getBarberiaBySlug(slug);
       if (b) {
         setBarberia(b);
         const s = await getTenantCollection(COLLECTIONS.SERVICIOS, b.id) as Servicio[];
@@ -154,7 +157,7 @@ export default function PublicBarberiaLanding({ params }: { params: { slug: stri
           {servicios.map((s) => (
             <Link 
               key={s.id}
-              href={`/reservar/${params.slug}?id=${s.id}`}
+              href={`/reservar/${slug}?id=${s.id}`}
               className="bg-[#111] p-8 rounded-[35px] border border-white/5 hover:border-primary/30 transition-all group flex flex-col justify-between gap-8 active:scale-[0.98]"
             >
               <div className="space-y-4">

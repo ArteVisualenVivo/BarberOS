@@ -55,7 +55,14 @@ export default function SettingsPage() {
   const [horarios, setHorarios] = useState<any>(DEFAULT_HORARIOS);
 
   const generateSlug = (value: string) => {
-    return value.toLowerCase().trim().replace(/\s+/g, "-");
+    return value
+      .toLowerCase()
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[\s_]+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/^-+|-+$/g, "");
   };
 
   useEffect(() => {
@@ -80,10 +87,7 @@ export default function SettingsPage() {
     setLoading(true);
 
     try {
-      const slugFinal = (formData.slug || formData.nombre)
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, "-");
+      const slugFinal = generateSlug(formData.slug || formData.nombre);
 
       await updateDoc(doc(db, "barberias", barberia.id), {
         nombre: formData.nombre,
@@ -117,7 +121,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Configuración</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Configuración del negocio</h1>
           <p className="text-sm text-zinc-500 mt-1">Gestiona las preferencias de tu negocio y tu plan de suscripción.</p>
         </div>
         

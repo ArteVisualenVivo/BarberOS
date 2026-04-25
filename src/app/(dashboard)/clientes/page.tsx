@@ -2,7 +2,7 @@
 
 import { useBarberia } from "@/hooks/useBarberia";
 import { useEffect, useState } from "react";
-import { getTenantCollection, addTenantDoc, COLLECTIONS } from "@/lib/db";
+import { getTenantCollection, addTenantDoc, deleteTenantDoc, COLLECTIONS } from "@/lib/db";
 import { 
   Users, 
   Search, 
@@ -28,8 +28,46 @@ export default function ClientesAdmin() {
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [newClienteNombre, setNewClienteNombre] = useState("");
   const [newClienteWhatsapp, setNewClienteWhatsapp] = useState("");
+  const [turnoServicio, setTurnoServicio] = useState("");
+  const [turnoFecha, setTurnoFecha] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [turnoHora, setTurnoHora] = useState("");
+  const [turnoPrecio, setTurnoPrecio] = useState("");
   const [savingCliente, setSavingCliente] = useState(false);
   const [clientError, setClientError] = useState("");
+  const [activeClientMenu, setActiveClientMenu] = useState<string | null>(null);
+
+  const openWhatsApp = (whatsapp: string) => {
+    if (!whatsapp) return;
+    window.open(`https://wa.me/${whatsapp}`, "_blank");
+  };
+
+  const toggleClientMenu = (id: string) => {
+    setActiveClientMenu((prev) => (prev === id ? null : id));
+  };
+
+  const toDate = (value: any): Date | null => {
+    if (!value) return null;
+    if (typeof value.toDate === "function") return value.toDate();
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const hoy = new Date();
+  const clientesActivos = clientes.filter((c) => {
+    const lastVisitDate = c.lastVisitDate ? new Date(c.lastVisitDate) : null;
+    if (!lastVisitDate) return false;
+    const diff = hoy.getTime() - lastVisitDate.getTime();
+    return diff <= 30 * 24 * 60 * 60 * 1000;
+  });
+  const nuevosEsteMes = clientes.filter((c) => {
+    const createdAtDate = c.createdAtDate ? new Date(c.createdAtDate) : null;
+    if (!createdAtDate) return false;
+    return (
+      createdAtDate.getFullYear() === hoy.getFullYear() &&
+      createdAtDate.getMonth() === hoy.getMonth()
+    );
+  });
+  const retentionPercent = clientes.length > 0 ? Math.round((clientesActivos.length / clientes.length) * 100) : 0;
 
   useEffect(() => {
     if (barberia) {
@@ -40,18 +78,32 @@ export default function ClientesAdmin() {
   const fetchClientes = async () => {
     try {
       const c = await getTenantCollection(COLLECTIONS.CLIENTES, barberia!.id);
-      // Remove duplicates by phone number
-      const uniqueClientes = c.reduce((acc: any[], current: any) => {
-        const x = acc.find(item => item.whatsapp === current.whatsapp);
-        if (!x) {
-          return acc.concat([current]);
-        } else {
-          return acc;
-        }
-      }, []);
-      setClientes(uniqueClientes);
+      const clientesConFechas = c.map((current: any) => {
+        return {
+          ...current,
+          createdAtDate: toDate(current.createdAt) || toDate(current.lastVisit),
+          lastVisitDate: toDate(current.lastVisit) || toDate(current.createdAt),
+        };
+      });
+      setClientes(clientesConFechas);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCliente = async (id: string) => {
+    const confirmed = window.confirm("¿Eliminar este cliente? Esta acción no se puede deshacer.");
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      await deleteTenantDoc(COLLECTIONS.CLIENTES, id);
+      await fetchClientes();
+    } catch (error) {
+      console.error("Error eliminando cliente:", error);
+      window.alert("No se pudo eliminar el cliente. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -80,8 +132,25 @@ export default function ClientesAdmin() {
         lastVisit: new Date(),
       });
 
+      if (turnoServicio.trim() && turnoFecha && turnoHora) {
+        await addTenantDoc(COLLECTIONS.TURNOS, {
+          barberiaId: barberia.id,
+          clienteNombre: newClienteNombre.trim(),
+          clienteWhatsapp: newClienteWhatsapp.trim(),
+          servicioNombre: turnoServicio.trim(),
+          fecha: turnoFecha,
+          hora: turnoHora,
+          precio: Number(turnoPrecio) || 0,
+          estado: "pendiente",
+        });
+      }
+
       setNewClienteNombre("");
       setNewClienteWhatsapp("");
+      setTurnoServicio("");
+      setTurnoFecha(new Date().toISOString().slice(0, 10));
+      setTurnoHora("");
+      setTurnoPrecio("");
       setIsAddFormOpen(false);
       fetchClientes();
     } catch (error) {
@@ -142,6 +211,51 @@ export default function ClientesAdmin() {
                 />
               </div>
             </div>
+            <div className="mt-6 border-t border-white/10 pt-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-zinc-500 mb-3">Opcional: agregar turno</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Servicio</label>
+                  <input
+                    type="text"
+                    value={turnoServicio}
+                    onChange={(e) => setTurnoServicio(e.target.value)}
+                    placeholder="Ej: Corte, Barba, etc."
+                    className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Fecha</label>
+                    <input
+                      type="date"
+                      value={turnoFecha}
+                      onChange={(e) => setTurnoFecha(e.target.value)}
+                      className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Hora</label>
+                    <input
+                      type="time"
+                      value={turnoHora}
+                      onChange={(e) => setTurnoHora(e.target.value)}
+                      className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Precio (opcional)</label>
+                  <input
+                    type="number"
+                    value={turnoPrecio}
+                    onChange={(e) => setTurnoPrecio(e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                  />
+                </div>
+              </div>
+            </div>
 
             {clientError && (
               <div className="rounded-3xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-sm text-rose-200">
@@ -177,21 +291,21 @@ export default function ClientesAdmin() {
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-2">Total Clientes</p>
           <div className="flex items-baseline gap-3">
             <h3 className="text-3xl font-bold text-white">{clientes.length}</h3>
-            <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/5 px-2 py-0.5 rounded-full">+12%</span>
+            <span className="text-[11px] text-zinc-400 font-bold bg-white/5 px-2 py-0.5 rounded-full">Clientes únicos</span>
           </div>
         </div>
         <div className="glass p-6 rounded-2xl shadow-soft">
-          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-2">Retención Activa</p>
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-2">Clientes Activos (30 días)</p>
           <div className="flex items-baseline gap-3">
-            <h3 className="text-3xl font-bold text-white">{Math.floor(clientes.length * 0.6)}</h3>
-            <span className="text-[11px] text-zinc-500 font-bold bg-white/5 px-2 py-0.5 rounded-full">60%</span>
+            <h3 className="text-3xl font-bold text-white">{clientesActivos.length}</h3>
+            <span className="text-[11px] text-zinc-500 font-bold bg-white/5 px-2 py-0.5 rounded-full">{retentionPercent}%</span>
           </div>
         </div>
         <div className="glass p-6 rounded-2xl shadow-soft">
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-2">Nuevos este mes</p>
           <div className="flex items-baseline gap-3">
-            <h3 className="text-3xl font-bold text-white">8</h3>
-            <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/5 px-2 py-0.5 rounded-full">+2</span>
+            <h3 className="text-3xl font-bold text-white">{nuevosEsteMes.length}</h3>
+            <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/5 px-2 py-0.5 rounded-full">{nuevosEsteMes.length > 0 ? "+" + nuevosEsteMes.length : "0"}</span>
           </div>
         </div>
       </div>
@@ -276,12 +390,33 @@ export default function ClientesAdmin() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                        <button className="p-2 text-zinc-500 hover:text-white transition-all hover:bg-white/5 rounded-lg">
+                        <button onClick={() => openWhatsApp(c.whatsapp)} title="Abrir WhatsApp" className="p-2 text-zinc-500 hover:text-white transition-all hover:bg-white/5 rounded-lg">
                           <ExternalLink size={16} />
                         </button>
-                        <button className="p-2 text-zinc-500 hover:text-white transition-all hover:bg-white/5 rounded-lg">
-                          <MoreVertical size={16} />
-                        </button>
+                        <div className="relative">
+                          <button onClick={() => toggleClientMenu(c.id)} title="Más acciones" className="p-2 text-zinc-500 hover:text-white transition-all hover:bg-white/5 rounded-lg">
+                            <MoreVertical size={16} />
+                          </button>
+                          {activeClientMenu === c.id && (
+                            <div className="absolute right-0 top-full mt-2 w-40 rounded-2xl border border-white/10 bg-[#0c0c0f] shadow-2xl z-10 overflow-hidden">
+                              <button
+                                onClick={() => openWhatsApp(c.whatsapp)}
+                                className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5"
+                              >
+                                Abrir WhatsApp
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleDeleteCliente(c.id);
+                                  setActiveClientMenu(null);
+                                }}
+                                className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5"
+                              >
+                                Eliminar cliente
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>

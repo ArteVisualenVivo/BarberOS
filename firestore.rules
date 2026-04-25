@@ -18,7 +18,20 @@ service cloud.firestore {
 
     // Reglas para usuarios
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create, read, update, delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Reglas para licencias SaaSControl
+    function isLicenseManager() {
+      return request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin" ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "owner"
+      );
+    }
+
+    match /licenses/{licenseId} {
+      allow read: if isLicenseManager();
+      allow create, update, delete: if isLicenseManager();
     }
 
     // Reglas para colecciones multi-tenant (turnos, servicios, clientes)

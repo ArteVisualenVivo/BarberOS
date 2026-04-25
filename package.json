@@ -29,10 +29,10 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "autoprefixer": "^10.4.27",
+    "autoprefixer": "^10.5.0",
     "eslint": "latest",
     "eslint-config-next": "latest",
-    "postcss": "^8.5.9",
+    "postcss": "^8.5.10",
     "supabase": "latest",
     "tailwindcss": "^4.2.2",
     "typescript": "latest"

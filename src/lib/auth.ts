@@ -17,12 +17,22 @@ export interface UserData {
 }
 
 /**
- * Registra un nuevo usuario en Firebase Auth
+ * Registra un nuevo usuario en Firebase Auth y crea su documento en Firestore
  */
 export const registerUser = async (email: string, password: string) => {
   try {
     const userCredential = await firebaseCreateUser(auth, email, password);
-    return userCredential.user;
+    const user = userCredential.user;
+
+    // Crear documento básico en Firestore inmediatamente
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      email: user.email,
+      role: "owner",
+      createdAt: serverTimestamp(),
+    });
+
+    return user;
   } catch (error: any) {
     console.error("Error en registerUser:", error.code, error.message);
     throw error;
@@ -71,10 +81,17 @@ export const createUserData = async (uid: string, data: Partial<UserData>) => {
 export const getUserData = async (uid: string): Promise<UserData | null> => {
   try {
     const snap = await getDoc(doc(db, "users", uid));
-    if (!snap.exists()) return null;
+    if (!snap.exists()) {
+      console.warn(`Documento de usuario no encontrado para UID: ${uid}`);
+      return null;
+    }
     return snap.data() as UserData;
-  } catch (error) {
-    console.error("Error en getUserData:", error);
+  } catch (error: any) {
+    console.error("Error en getUserData:", error.code || error.message || error);
+    // Si es permission-denied, es un error crítico
+    if (error.code === "permission-denied") {
+      throw new Error("Permisos insuficientes para acceder a los datos del usuario");
+    }
     return null;
   }
 };

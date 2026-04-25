@@ -32,9 +32,8 @@ const COLLECTIONS = {
 // Generic CRUD functions for tenant-based data
 export async function getTenantCollection<T = any>(collectionName: string, barberiaId: string): Promise<T[]> {
   const q = query(
-    collection(db, collectionName), 
-    where("barberiaId", "==", barberiaId),
-    orderBy("createdAt", "desc")
+    collection(db, collectionName),
+    where("barberiaId", "==", barberiaId)
   );
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
