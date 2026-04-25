@@ -47,6 +47,29 @@ export const getBarberiaBySlug = async (slug: string) => {
 /**
  * ACCESO DASHBOARD SIMPLE
  */
-export const hasDashboardAccess = (role?: string) => {
-  return role === "owner" || role === "admin";
+export const hasDashboardAccess = (barberia: any) => {
+  if (!barberia) return false;
+
+  // acceso directo por suscripción activa
+  if (
+    barberia.subscriptionStatus === "active" ||
+    barberia.subscriptionStatus === "pro" ||
+    barberia.plan === "pro"
+  ) {
+    return true;
+  }
+
+  // cálculo de trial
+  const trialStart =
+    barberia.trialStartAt?.toDate?.()?.getTime?.() ??
+    (barberia.trialStartAt ? new Date(barberia.trialStartAt).getTime() : null);
+
+  const trialDays = Number(barberia.trialDays) || 7;
+
+  if (trialStart) {
+    const trialEnds = trialStart + trialDays * 24 * 60 * 60 * 1000;
+    return Date.now() < trialEnds;
+  }
+
+  return false;
 };
