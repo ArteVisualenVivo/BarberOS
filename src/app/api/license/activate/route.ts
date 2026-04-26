@@ -82,6 +82,9 @@ export async function POST(req: Request) {
         licenseCode: normalizedCode,
         subscriptionStatus: "active",
         activatedAt: new Date(),
+        plan: "pro",
+        licenseStartAt: new Date(),
+        licenseExpiresAt: license.expiresAt,
       },
       { merge: true }
     );
