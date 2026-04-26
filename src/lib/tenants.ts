@@ -50,26 +50,31 @@ export const getBarberiaBySlug = async (slug: string) => {
 export const hasDashboardAccess = (barberia: any) => {
   if (!barberia) return false;
 
-  // acceso directo por suscripción activa
-  if (
-    barberia?.subscriptionStatus === "active" ||
-    barberia?.subscriptionStatus === "pro" ||
-    barberia?.plan === "pro"
-  ) {
-    return true;
+  try {
+    // acceso directo por suscripción activa
+    if (
+      barberia?.subscriptionStatus === "active" ||
+      barberia?.subscriptionStatus === "pro" ||
+      barberia?.plan === "pro"
+    ) {
+      return true;
+    }
+
+    // cálculo de trial
+    const trialStart =
+      barberia?.trialStartAt?.toDate?.()?.getTime?.() ??
+      (barberia?.trialStartAt ? new Date(barberia?.trialStartAt).getTime() : null);
+
+    const trialDays = Number(barberia?.trialDays) || 7;
+
+    if (trialStart && !isNaN(trialStart)) {
+      const trialEnds = trialStart + trialDays * 24 * 60 * 60 * 1000;
+      return Date.now() < trialEnds;
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Error in hasDashboardAccess:", error);
+    return false;
   }
-
-  // cálculo de trial
-  const trialStart =
-    barberia?.trialStartAt?.toDate?.()?.getTime?.() ??
-    (barberia?.trialStartAt ? new Date(barberia?.trialStartAt).getTime() : null);
-
-  const trialDays = Number(barberia?.trialDays) || 7;
-
-  if (trialStart) {
-    const trialEnds = trialStart + trialDays * 24 * 60 * 60 * 1000;
-    return Date.now() < trialEnds;
-  }
-
-  return false;
 };

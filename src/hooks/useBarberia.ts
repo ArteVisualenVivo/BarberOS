@@ -12,24 +12,30 @@ export const useBarberia = () => {
     let active = true;
 
     const load = async () => {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      // 🔑 Espera REAL a Firebase Auth
-      await authReadyPromise;
+        // 🔑 Espera REAL a Firebase Auth
+        await authReadyPromise;
 
-      const user = getCurrentUser();
+        const user = getCurrentUser();
 
-      if (!user?.uid) {
+        if (!user?.uid || !active) {
+          setLoading(false);
+          return;
+        }
+
+        const data = await getBarberiasByOwner(user.uid);
+
+        if (!active) return;
+
+        setBarberia(data?.[0] || null);
+      } catch (error) {
+        console.error("Error in useBarberia:", error);
+        setBarberia(null);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const data = await getBarberiasByOwner(user.uid);
-
-      if (!active) return;
-
-      setBarberia(data?.[0] || null);
-      setLoading(false);
     };
 
     load();

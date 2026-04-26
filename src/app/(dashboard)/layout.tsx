@@ -69,12 +69,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isPro = barberia?.plan === "pro" || barberia?.plan === "PRO";
 
   useEffect(() => {
-    if (!loading && !barberiaLoading && barberia && !hasDashboardAccess(barberia)) {
-      router.push("/activate");
-    }
-  }, [loading, barberiaLoading, barberia, router]);
-
-  useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
     }
