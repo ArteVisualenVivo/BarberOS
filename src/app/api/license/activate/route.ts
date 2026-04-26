@@ -19,7 +19,13 @@ export async function POST(req: Request) {
 
     const licenseRef = db.collection("licenses").doc(normalizedCode);
     const licenseSnap = await licenseRef.get();
+
+    console.log("BUSCANDO LICENSE:", normalizedCode);
+    console.log("EXISTS:", licenseSnap.exists);
+
     if (!licenseSnap.exists) {
+      const all = await db.collection("licenses").get();
+      console.log("TODAS LAS LICENSES:", all.docs.map(d => d.id));
       return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 400 });
     }
 
