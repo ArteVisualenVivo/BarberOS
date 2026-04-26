@@ -63,41 +63,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 500 });
   }
 }
-import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase-admin";
-
-const LICENSE_CODE_REGEX = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
-
-export async function POST(req: Request) {
-
-  // 🔥 DEBUG CRÍTICO: confirma si la API está siendo llamada
-  console.log("🔥 API LICENSE HIT");
-
-  try {
-    console.log("🔥 [1] ENTER /api/license/activate");
-
-    const body = await req.json();
-    console.log("📦 [2] BODY RECEIVED:", body);
-
-    const { code, barberiaId } = body;
-
-    if (!code || !barberiaId) {
-      console.log("❌ Missing code or barberiaId");
-      return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 400 });
-    }
-
-    const normalizedCode = String(code).toUpperCase().trim();
-    console.log("🔑 [3] NORMALIZED CODE:", normalizedCode);
-
-    if (!LICENSE_CODE_REGEX.test(normalizedCode)) {
-      console.log("❌ Invalid format code");
-      return NextResponse.json({ ok: false, error: "invalid_code" }, { status: 400 });
-    }
-
-    console.log("🧠 [4] BEFORE FIRESTORE QUERY");
-
-    console.log("LOOKING FOR DOC ID:", normalizedCode);
-    const licenseRef = db.collection("licenses").doc(normalizedCode);
     const licenseSnap = await licenseRef.get();
 
     console.log("DOC EXISTS:", licenseSnap.exists);
