@@ -5,6 +5,8 @@ if (!admin.apps.length) {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
+  console.log("FIREBASE PROJECT:", process.env.FIREBASE_PROJECT_ID);
+
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error("❌ Missing Firebase env vars in Vercel");
   }
