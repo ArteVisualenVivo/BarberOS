@@ -123,7 +123,7 @@ export default function DashboardPage() {
     },
   ];
 
-  const bookingUrl = barberia?.slug && origin ? `${origin}/reservar/${barberia.slug}` : "";
+  const bookingUrl = barberia?.slug && origin ? `${origin}/reservar/${barberia?.slug}` : "";
   const mensaje = bookingUrl
     ? `Reservá tu turno online en segundos 👇\n${bookingUrl}\nElegí día y horario sin vueltas`
     : "";
