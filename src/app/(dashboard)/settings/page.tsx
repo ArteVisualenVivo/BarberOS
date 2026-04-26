@@ -387,6 +387,35 @@ export default function SettingsPage() {
                       El dashboard se bloqueará y solo podrás ingresar a <span className="font-semibold text-white">/activate</span> para validar tu código.
                     </p>
                   </div>
+                    {/* --- MEJORAR AHORA / PLAN ACTIVADO --- */}
+                    {(() => {
+                      // Considera activa si subscriptionStatus === 'active' o plan === 'pro' o licenseExpiresAt futura
+                      const expiresAt = barberia?.licenseExpiresAt ? new Date(barberia.licenseExpiresAt).getTime() : 0;
+                      const isLicenseActive = barberia?.subscriptionStatus === 'active' || barberia?.plan === 'pro' || (expiresAt && Date.now() < expiresAt);
+                      if (isLicenseActive) {
+                        return (
+                          <div className="mt-8 flex flex-col items-center justify-center">
+                            <span className="inline-block px-6 py-3 rounded-xl bg-emerald-600/80 text-white font-bold text-lg tracking-wider shadow-soft cursor-default select-none opacity-80">
+                              🟢 Plan activado
+                            </span>
+                            {expiresAt ? (
+                              <span className="mt-2 text-xs text-zinc-400">Válido hasta: {new Date(expiresAt).toLocaleDateString()}</span>
+                            ) : null}
+                          </div>
+                        );
+                      }
+                      // Si no está activo, mostrar CTA para mejorar
+                      return (
+                        <div className="mt-8 flex flex-col items-center justify-center">
+                          <a
+                            href="/activate"
+                            className="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-black font-bold text-lg tracking-wider shadow-soft hover:scale-105 transition-transform"
+                          >
+                            ⭐ Mejorar ahora
+                          </a>
+                        </div>
+                      );
+                    })()}
                   {process.env.NODE_ENV === "development" && (
                     <button
                       onClick={() => {
