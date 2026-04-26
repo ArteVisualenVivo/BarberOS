@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useBarberia } from "@/hooks/useBarberia";
 import { hasDashboardAccess } from "@/lib/tenants";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { 
   Scissors, 
@@ -29,16 +29,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const redirectRef = useRef(false);
 
-  // Add early return for null barberia
-  if (barberiaLoading || !barberia) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
+  // Handle redirects with useEffect to prevent infinite loops
+  useEffect(() => {
+    if (redirectRef.current) return;
 
+    // Don't redirect while loading
+    if (loading || barberiaLoading) return;
+
+    // Redirect if no user
+    if (!user) {
+      redirectRef.current = true;
+      router.push("/login");
+      return;
+    }
+
+    // Redirect if no barberia (should create one during register)
+    if (!barberia) {
+      redirectRef.current = true;
+      router.push("/login");
+      return;
+    }
+
+    // Redirect if no dashboard access
+    if (!hasDashboardAccess(barberia)) {
+      redirectRef.current = true;
+      router.push("/activate");
+      return;
+    }
+  }, [loading, barberiaLoading, user, barberia, router]);
+
+  // Show loading state while data is loading
   if (loading || barberiaLoading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -47,9 +69,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!user) return null;
-
-  if (barberia && !hasDashboardAccess(barberia)) {
+  // If we need to redirect, show nothing while redirect happens
+  if (!user || !barberia || !hasDashboardAccess(barberia)) {
     return null;
   }
 
@@ -67,12 +88,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const isPro = barberia?.plan === "pro" || barberia?.plan === "PRO";
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-400 font-sans antialiased selection:bg-white/10 selection:text-white">

@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { getBarberiasByOwner } from "@/lib/tenants";
-import { getCurrentUser, authReadyPromise } from "@/lib/auth";
+import { useAuth } from "./useAuth";
 
 export const useBarberia = () => {
+  const { user } = useAuth();
   const [barberia, setBarberia] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -15,12 +16,9 @@ export const useBarberia = () => {
       try {
         setLoading(true);
 
-        // 🔑 Espera REAL a Firebase Auth
-        await authReadyPromise;
-
-        const user = getCurrentUser();
-
-        if (!user?.uid || !active) {
+        // Wait for user to be available
+        if (!user?.uid) {
+          setBarberia(null);
           setLoading(false);
           return;
         }
@@ -34,7 +32,9 @@ export const useBarberia = () => {
         console.error("Error in useBarberia:", error);
         setBarberia(null);
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
@@ -43,7 +43,7 @@ export const useBarberia = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user?.uid]);
 
   return { barberia, loading };
 };
