@@ -42,11 +42,13 @@ export default function ActivatePage() {
       return;
     }
 
-    if (!barberia?.id) {
+    if (!barberia?.id || typeof barberia.id !== 'string' || barberia.id.trim() === '') {
       setError("No se encontró la barbería. Recarga la página e intenta de nuevo.");
       setStatus("error");
       return;
     }
+
+    console.log("DEBUG: Enviando barberiaId:", barberia.id);
 
     try {
       const response = await fetch("/api/license/activate", {

@@ -11,10 +11,17 @@ export const useBarberia = () => {
 
   const fetchBarberia = async () => {
     if (user) {
+      console.log("DEBUG useBarberia: Fetching for user:", user.uid);
       const barberias = await getBarberiasByOwner(user.uid);
+      console.log("DEBUG useBarberia: Found barberias:", barberias);
       if (barberias.length > 0) {
-        setBarberia(barberias[0]); // Por ahora tomamos la primera
+        console.log("DEBUG useBarberia: Setting barberia:", barberias[0]);
+        setBarberia(barberias[0]);
+      } else {
+        console.log("DEBUG useBarberia: No barberias found");
       }
+    } else {
+      console.log("DEBUG useBarberia: No user");
     }
     setLoading(false);
   };
