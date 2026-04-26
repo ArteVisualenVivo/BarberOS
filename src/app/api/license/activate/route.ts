@@ -18,8 +18,22 @@ export async function POST(req: Request) {
 
     const normalizedCode = String(code).toUpperCase().trim();
 
-    const licenseRef = db.collection("licenses").doc(normalizedCode);
-    const licenseSnap = await licenseRef.get();
+    let licenseSnap;
+    try {
+      const licenseRef = db.collection("licenses").doc(normalizedCode);
+      licenseSnap = await licenseRef.get();
+    } catch (err: any) {
+      console.error("[ACTIVATE] DB ERROR:", err);
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "firebase_not_ready",
+          message: err?.message || "db error",
+        },
+        { status: 500 }
+      );
+    }
 
     console.log("[ACTIVATE] exists:", licenseSnap.exists);
 
@@ -31,7 +45,6 @@ export async function POST(req: Request) {
     }
 
     const license = licenseSnap.data();
-    console.log("[ACTIVATE] data:", license);
 
     if (!license) {
       return NextResponse.json(
@@ -40,7 +53,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validación status (si existe)
     if (license.status && license.status !== "active") {
       return NextResponse.json(
         { ok: false, error: "invalid_code" },
@@ -48,18 +60,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validación expiresAt segura
     if (license.expiresAt) {
       let expiresDate: Date | null = null;
 
-      if (typeof license.expiresAt?.toDate === "function") {
-        expiresDate = license.expiresAt.toDate();
-      } else if (license.expiresAt instanceof Date) {
-        expiresDate = license.expiresAt;
-      } else if (typeof license.expiresAt === "number") {
-        expiresDate = new Date(license.expiresAt);
-      } else if (typeof license.expiresAt === "string") {
-        expiresDate = new Date(license.expiresAt);
+      try {
+        if (typeof license.expiresAt?.toDate === "function") {
+          expiresDate = license.expiresAt.toDate();
+        } else if (license.expiresAt instanceof Date) {
+          expiresDate = license.expiresAt;
+        } else if (typeof license.expiresAt === "number") {
+          expiresDate = new Date(license.expiresAt);
+        } else if (typeof license.expiresAt === "string") {
+          expiresDate = new Date(license.expiresAt);
+        }
+      } catch {
+        expiresDate = null;
       }
 
       if (expiresDate && expiresDate.getTime() < Date.now()) {
@@ -70,7 +85,6 @@ export async function POST(req: Request) {
       }
     }
 
-    // Activación (actualiza barbería)
     await db.collection("barberias").doc(barberiaId).update({
       licenseCode: normalizedCode,
       subscriptionStatus: "active",
@@ -81,7 +95,6 @@ export async function POST(req: Request) {
       ok: true,
       message: "License activated successfully",
     });
-
   } catch (error: any) {
     console.error("[ACTIVATE ERROR FULL]:", error);
 
