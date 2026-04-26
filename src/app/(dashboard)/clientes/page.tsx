@@ -36,6 +36,15 @@ export default function ClientesAdmin() {
   const [clientError, setClientError] = useState("");
   const [activeClientMenu, setActiveClientMenu] = useState<string | null>(null);
 
+  // Guard clause por seguridad
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const openWhatsApp = (whatsapp: string) => {
     if (!whatsapp) return;
     window.open(`https://wa.me/${whatsapp}`, "_blank");
@@ -79,7 +88,7 @@ export default function ClientesAdmin() {
     if (!barberia) return;
 
     try {
-      const c = await getTenantCollection(COLLECTIONS.CLIENTES, barberia.id);
+      const c = await getTenantCollection(COLLECTIONS.CLIENTES, barberia?.id);
       const clientesConFechas = c.map((current: any) => {
         return {
           ...current,
@@ -128,7 +137,7 @@ export default function ClientesAdmin() {
 
     try {
       await addTenantDoc(COLLECTIONS.CLIENTES, {
-        barberiaId: barberia.id,
+        barberiaId: barberia?.id,
         nombre: newClienteNombre.trim(),
         whatsapp: newClienteWhatsapp.trim(),
         lastVisit: new Date(),
@@ -136,7 +145,7 @@ export default function ClientesAdmin() {
 
       if (turnoServicio.trim() && turnoFecha && turnoHora) {
         await addTenantDoc(COLLECTIONS.TURNOS, {
-          barberiaId: barberia.id,
+          barberiaId: barberia?.id,
           clienteNombre: newClienteNombre.trim(),
           clienteWhatsapp: newClienteWhatsapp.trim(),
           servicioNombre: turnoServicio.trim(),

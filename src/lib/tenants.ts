@@ -52,19 +52,19 @@ export const hasDashboardAccess = (barberia: any) => {
 
   // acceso directo por suscripción activa
   if (
-    barberia.subscriptionStatus === "active" ||
-    barberia.subscriptionStatus === "pro" ||
-    barberia.plan === "pro"
+    barberia?.subscriptionStatus === "active" ||
+    barberia?.subscriptionStatus === "pro" ||
+    barberia?.plan === "pro"
   ) {
     return true;
   }
 
   // cálculo de trial
   const trialStart =
-    barberia.trialStartAt?.toDate?.()?.getTime?.() ??
-    (barberia.trialStartAt ? new Date(barberia.trialStartAt).getTime() : null);
+    barberia?.trialStartAt?.toDate?.()?.getTime?.() ??
+    (barberia?.trialStartAt ? new Date(barberia?.trialStartAt).getTime() : null);
 
-  const trialDays = Number(barberia.trialDays) || 7;
+  const trialDays = Number(barberia?.trialDays) || 7;
 
   if (trialStart) {
     const trialEnds = trialStart + trialDays * 24 * 60 * 60 * 1000;

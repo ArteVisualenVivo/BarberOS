@@ -35,6 +35,15 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [recientes, setRecientes] = useState<any[]>([]);
 
+  // Guard clause por seguridad
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const getDate = (value) => {
     if (!value) return null;
     if (value.seconds) return new Date(value.seconds * 1000);
@@ -58,8 +67,8 @@ export default function DashboardPage() {
 
     try {
       const [turnos, clientes] = await Promise.all([
-        getTenantCollection(COLLECTIONS.TURNOS, barberia.id),
-        getTenantCollection(COLLECTIONS.CLIENTES, barberia.id),
+        getTenantCollection(COLLECTIONS.TURNOS, barberia?.id),
+        getTenantCollection(COLLECTIONS.CLIENTES, barberia?.id),
       ]);
 
       const hoy = new Date().toLocaleDateString("en-CA");
@@ -354,7 +363,7 @@ export default function DashboardPage() {
             {(() => {
               const isExpired =
                 barberia?.licenseExpiresAt &&
-                getDate(barberia.licenseExpiresAt) < new Date();
+                getDate(barberia?.licenseExpiresAt) < new Date();
 
               if (!isExpired && barberia?.plan === "pro") {
                 return (

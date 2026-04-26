@@ -89,7 +89,7 @@ function ReservaContent({ slug }: { slug: string }) {
     if (!barberia || !servicio) return;
     setLoadingSlots(true);
     try {
-      const slots = await getAvailableSlots(barberia.id, fecha, servicio.duracion || 30);
+      const slots = await getAvailableSlots(barberia?.id, fecha, servicio.duracion || 30);
       setAvailableSlots(slots);
       if (!slots.includes(hora)) setHora("");
     } catch (error) {
@@ -104,7 +104,7 @@ function ReservaContent({ slug }: { slug: string }) {
     setSaving(true);
     try {
       // 0. Verificar límites de plan
-      const limitCheck = await checkPlanLimits(barberia.id, "create_turno");
+      const limitCheck = await checkPlanLimits(barberia?.id, "create_turno");
       if (!limitCheck.allowed) {
         alert(limitCheck.reason);
         return;
@@ -113,7 +113,7 @@ function ReservaContent({ slug }: { slug: string }) {
       // 0.5 Verificar solapamiento (Double check)
       const q = query(
         collection(db, "turnos"),
-        where("barberiaId", "==", barberia.id),
+        where("barberiaId", "==", barberia?.id),
         where("fecha", "==", fecha),
         where("hora", "==", hora),
         where("estado", "in", ["pendiente", "confirmado"])
@@ -128,7 +128,7 @@ function ReservaContent({ slug }: { slug: string }) {
 
       // 1. Guardar Turno
       await addDoc(collection(db, "turnos"), {
-        barberiaId: barberia.id,
+        barberiaId: barberia?.id,
         servicioId: servicio.id,
         servicioNombre: servicio.nombre,
         precio: Number(servicio.precio),
@@ -143,7 +143,7 @@ function ReservaContent({ slug }: { slug: string }) {
 
       // 2. Registrar/Actualizar Cliente
       await addDoc(collection(db, "clientes"), {
-        barberiaId: barberia.id,
+        barberiaId: barberia?.id,
         nombre: cliente.nombre,
         whatsapp: cliente.whatsapp,
         lastVisit: serverTimestamp(),
@@ -203,7 +203,7 @@ function ReservaContent({ slug }: { slug: string }) {
           <div className="bg-primary/10 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto border border-primary/20 mb-2">
             <Scissors className="text-primary w-8 h-8" />
           </div>
-          <h1 className="text-4xl font-black uppercase tracking-tight">{barberia.nombre}</h1>
+          <h1 className="text-4xl font-black uppercase tracking-tight">{barberia?.nombre ?? "Barbería"}</h1>
           <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Reservando: <span className="text-primary">{servicio.nombre}</span></p>
         </div>
 

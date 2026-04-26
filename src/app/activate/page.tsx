@@ -19,6 +19,15 @@ export default function ActivatePage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [error, setError] = useState("");
 
+  // Guard clause por seguridad
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
       `Hola, quiero activar mi barbería/peluquería\n\n` +
@@ -42,19 +51,19 @@ export default function ActivatePage() {
       return;
     }
 
-    if (!barberia?.id || typeof barberia.id !== 'string' || barberia.id.trim() === '') {
+    if (!barberia?.id || typeof barberia?.id !== 'string' || barberia?.id?.trim() === '') {
       setError("No se encontró la barbería. Recarga la página e intenta de nuevo.");
       setStatus("error");
       return;
     }
 
-    console.log("DEBUG: Enviando barberiaId:", barberia.id);
+    console.log("DEBUG: Enviando barberiaId:", barberia?.id);
 
     try {
       const response = await fetch("/api/license/activate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, barberiaId: barberia.id }),
+        body: JSON.stringify({ code, barberiaId: barberia?.id }),
       });
 
       const data = await response.json();

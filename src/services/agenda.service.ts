@@ -30,7 +30,7 @@ export async function checkAvailability(
   const fechaObj = new Date(fecha + "T00:00:00");
   const diasSemana = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
   const nombreDia = diasSemana[fechaObj.getDay()];
-  const horarioDia = barberia.horarios?.[nombreDia];
+  const horarioDia = barberia?.horarios?.[nombreDia];
 
   if (!horarioDia || !horarioDia.abierto) {
     return { disponible: false, motivo: "La barbería está cerrada este día" };
@@ -90,7 +90,7 @@ export async function getAvailableSlots(
   const fechaObj = new Date(fecha + "T00:00:00");
   const diasSemana = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
   const nombreDia = diasSemana[fechaObj.getDay()];
-  const horarioDia = barberia.horarios?.[nombreDia];
+  const horarioDia = barberia?.horarios?.[nombreDia];
 
   if (!horarioDia || !horarioDia.abierto) return [];
 

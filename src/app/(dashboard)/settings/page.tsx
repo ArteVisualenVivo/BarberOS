@@ -43,6 +43,15 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState("general"); // general, horarios, plan
 
+  // Guard clause por seguridad
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const [formData, setFormData] = useState({
     nombre: "",
     slug: "",
@@ -68,15 +77,15 @@ export default function SettingsPage() {
   useEffect(() => {
     if (barberia) {
       setFormData({
-        nombre: barberia.nombre || "",
-        slug: barberia.slug || "",
-        descripcion: barberia.descripcion || "",
-        telefono: barberia.telefono || "",
-        direccion: barberia.direccion || "",
-        logoUrl: barberia.logoUrl || ""
+        nombre: barberia?.nombre || "",
+        slug: barberia?.slug || "",
+        descripcion: barberia?.descripcion || "",
+        telefono: barberia?.telefono || "",
+        direccion: barberia?.direccion || "",
+        logoUrl: barberia?.logoUrl || ""
       });
-      if (barberia.horarios) {
-        setHorarios(barberia.horarios);
+      if (barberia?.horarios) {
+        setHorarios(barberia?.horarios);
       }
     }
   }, [barberia]);
@@ -89,7 +98,7 @@ export default function SettingsPage() {
     try {
       const slugFinal = generateSlug(formData.slug || formData.nombre);
 
-      await updateDoc(doc(db, "barberias", barberia.id), {
+      await updateDoc(doc(db, "barberias", barberia?.id), {
         nombre: formData.nombre,
         descripcion: formData.descripcion,
         telefono: formData.telefono,
@@ -125,8 +134,8 @@ export default function SettingsPage() {
   }
 
   const isExpired =
-    barberia.licenseExpiresAt &&
-    new Date(barberia.licenseExpiresAt.seconds * 1000) < new Date();
+    barberia?.licenseExpiresAt &&
+    new Date(barberia?.licenseExpiresAt.seconds * 1000) < new Date();
 
   return (
     <div className="space-y-10">
@@ -402,7 +411,7 @@ export default function SettingsPage() {
                     {/* --- MEJORAR AHORA / PLAN ACTIVADO --- */}
                     {(() => {
                       // Considera activa si subscriptionStatus === 'active' o plan === 'pro' o licenseExpiresAt futura
-                      const expiresAt = barberia?.licenseExpiresAt ? new Date(barberia.licenseExpiresAt).getTime() : 0;
+                      const expiresAt = barberia?.licenseExpiresAt ? new Date(barberia?.licenseExpiresAt).getTime() : 0;
                       const isLicenseActive = barberia?.subscriptionStatus === 'active' || barberia?.plan === 'pro' || (expiresAt && Date.now() < expiresAt);
                       if (isLicenseActive) {
                         return (

@@ -28,6 +28,15 @@ export default function ServiciosAdmin() {
     duracion: "30",
   });
 
+  // Guard clause por seguridad
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   useEffect(() => {
     if (barberia) {
       fetchServicios();
@@ -38,7 +47,7 @@ export default function ServiciosAdmin() {
     if (!barberia) return;
 
     try {
-      const s = await getTenantCollection(COLLECTIONS.SERVICIOS, barberia.id);
+      const s = await getTenantCollection(COLLECTIONS.SERVICIOS, barberia?.id);
       setServicios(s);
     } catch (error) {
       console.error(error);
@@ -56,7 +65,7 @@ export default function ServiciosAdmin() {
         ...formData,
         precio: Number(formData.precio),
         duracion: Number(formData.duracion),
-        barberiaId: barberia.id
+        barberiaId: barberia?.id
       };
 
       if (editingServicio) {

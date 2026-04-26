@@ -38,6 +38,15 @@ export default function TurnosAdmin() {
   const isNuevo = searchParams.get("nuevo") === "true";
   const [turnos, setTurnos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Guard clause por seguridad
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
   const [viewMode, setViewMode] = useState<ViewMode>("lista");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [filtro, setFiltro] = useState("todos");
@@ -61,7 +70,7 @@ export default function TurnosAdmin() {
     if (!barberia) return;
 
     try {
-      const t = await getTenantCollection(COLLECTIONS.TURNOS, barberia.id);
+      const t = await getTenantCollection(COLLECTIONS.TURNOS, barberia?.id);
       setTurnos(t);
     } catch (error) {
       console.error(error);
@@ -82,7 +91,7 @@ export default function TurnosAdmin() {
 
     try {
       await addTenantDoc(COLLECTIONS.TURNOS, {
-        barberiaId: barberia.id,
+        barberiaId: barberia?.id,
         clienteNombre: clienteNombre.trim(),
         clienteWhatsapp: clienteWhatsapp.trim(),
         servicioNombre: servicioNombre.trim(),
