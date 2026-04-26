@@ -30,17 +30,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !barberiaLoading && barberia && !hasDashboardAccess(barberia)) {
-      router.push("/activate");
-    }
-  }, [loading, barberiaLoading, barberia, router]);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
+  // Add early return for null barberia
+  if (barberiaLoading || !barberia) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (loading || barberiaLoading) {
     return (
@@ -70,6 +67,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const isPro = barberia?.plan === "pro" || barberia?.plan === "PRO";
+
+  useEffect(() => {
+    if (!loading && !barberiaLoading && barberia && !hasDashboardAccess(barberia)) {
+      router.push("/activate");
+    }
+  }, [loading, barberiaLoading, barberia, router]);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-400 font-sans antialiased selection:bg-white/10 selection:text-white">
