@@ -85,11 +85,15 @@ export async function POST(req: Request) {
       }
     }
 
-    await db.collection("barberias").doc(barberiaId).update({
-      licenseCode: normalizedCode,
-      subscriptionStatus: "active",
-      activatedAt: new Date(),
-    });
+    // 🔥 FIX CLAVE: update → set (evita NOT_FOUND)
+    await db.collection("barberias").doc(barberiaId).set(
+      {
+        licenseCode: normalizedCode,
+        subscriptionStatus: "active",
+        activatedAt: new Date(),
+      },
+      { merge: true }
+    );
 
     return NextResponse.json({
       ok: true,
