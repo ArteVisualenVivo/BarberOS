@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default function DashboardPage() {
   const { barberia } = useBarberia();
   const { user, userData } = useAuth();
@@ -32,6 +34,12 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [recientes, setRecientes] = useState<any[]>([]);
+
+  const getDate = (value) => {
+    if (!value) return null;
+    if (value.seconds) return new Date(value.seconds * 1000);
+    return new Date(value);
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -127,6 +135,8 @@ export default function DashboardPage() {
     window.open(whatsappUrl, "_blank");
   };
 
+  console.log("BARBERIA DEBUG:", barberia);
+
   return (
     <div className="space-y-10">
       {/* Page Header */}
@@ -140,7 +150,7 @@ export default function DashboardPage() {
       {bookingUrl && (
         <div className="glass rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
           <div className="flex flex-col gap-4">
-            {barberia?.plan === "pro" ? (
+            {barberia?.subscriptionStatus === "active" ? (
               <div>
                 <h2 className="text-xl font-bold text-emerald-400">Plan PRO Activado ✔</h2>
                 <p className="text-sm text-zinc-400 mt-2">Tenés acceso a todas las funciones premium</p>
@@ -331,18 +341,39 @@ export default function DashboardPage() {
             <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Target size={120} className="text-white" />
             </div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-black shadow-lg shadow-white/10">
-                <TrendingUp size={18} />
-              </div>
-              <h3 className="text-sm font-bold text-white tracking-tight">Mejorar a Pro</h3>
-            </div>
-            <p className="text-xs text-zinc-500 leading-relaxed mb-6 font-medium">
-              Desbloquea analíticas avanzadas, turnos ilimitados y marca personalizada para tu negocio.
-            </p>
-            <Link href="/activate" className="block w-full text-center py-3 bg-white/[0.03] text-white border border-white/[0.08] rounded-xl text-xs font-bold hover:bg-white hover:text-black transition-all shadow-soft group-hover:border-white/20">
-              Mejorar Ahora
-            </Link>
+            {(() => {
+              const isExpired =
+                barberia.licenseExpiresAt &&
+                getDate(barberia.licenseExpiresAt) < new Date();
+
+              if (!isExpired && barberia.plan === "pro") {
+                return (
+                  <div>
+                    <h3 className="text-sm font-bold text-white tracking-tight">Plan Activo</h3>
+                    <p className="text-xs text-zinc-500 leading-relaxed mb-6 font-medium">
+                      Vence el: {getDate(barberia.licenseExpiresAt)?.toLocaleDateString()}
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-black shadow-lg shadow-white/10">
+                      <TrendingUp size={18} />
+                    </div>
+                    <h3 className="text-sm font-bold text-white tracking-tight">Mejorar a Pro</h3>
+                  </div>
+                  <p className="text-xs text-zinc-500 leading-relaxed mb-6 font-medium">
+                    Desbloquea analíticas avanzadas, turnos ilimitados y marca personalizada para tu negocio.
+                  </p>
+                  <Link href="/activate" className="block w-full text-center py-3 bg-white/[0.03] text-white border border-white/[0.08] rounded-xl text-xs font-bold hover:bg-white hover:text-black transition-all shadow-soft group-hover:border-white/20">
+                    Mejorar Ahora
+                  </Link>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>

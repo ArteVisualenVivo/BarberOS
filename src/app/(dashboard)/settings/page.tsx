@@ -116,6 +116,10 @@ export default function SettingsPage() {
     });
   };
 
+  const isExpired =
+    barberia.licenseExpiresAt &&
+    new Date(barberia.licenseExpiresAt.seconds * 1000) < new Date();
+
   return (
     <div className="space-y-10">
       {/* Header */}
@@ -411,7 +415,7 @@ export default function SettingsPage() {
                             href="/activate"
                             className="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-black font-bold text-lg tracking-wider shadow-soft hover:scale-105 transition-transform"
                           >
-                            ⭐ Mejorar ahora
+                            ⭐ Mejorar a Pro
                           </a>
                         </div>
                       );
