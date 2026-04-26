@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     }
 
     // (opcional) expiración simple
-    if (license.expiresAt) {
+    if (license?.expiresAt) {
       const expiresDate = license.expiresAt.toDate
         ? license.expiresAt.toDate()
         : new Date(license.expiresAt);
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
         activatedAt: new Date(),
         plan: "pro",
         licenseStartAt: new Date(),
-        licenseExpiresAt: license.expiresAt,
+        licenseExpiresAt: license?.expiresAt,
       },
       { merge: true }
     );
