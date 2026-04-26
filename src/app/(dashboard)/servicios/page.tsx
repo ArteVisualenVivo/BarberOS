@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 export default function ServiciosAdmin() {
-  const { barberia } = useBarberia();
+  const { barberia, loading: barberiaLoading } = useBarberia();
   const [servicios, setServicios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,15 +27,6 @@ export default function ServiciosAdmin() {
     precio: "",
     duracion: "30",
   });
-
-  // Guard clause por seguridad
-  if (!barberia) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   useEffect(() => {
     if (barberia) {
@@ -103,7 +94,7 @@ export default function ServiciosAdmin() {
     setIsModalOpen(true);
   };
 
-  if (!barberia) {
+  if (barberiaLoading || !barberia) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />

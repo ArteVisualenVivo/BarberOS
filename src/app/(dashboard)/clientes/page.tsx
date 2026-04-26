@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 export default function ClientesAdmin() {
-  const { barberia } = useBarberia();
+  const { barberia, loading: barberiaLoading } = useBarberia();
   const [clientes, setClientes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,15 +35,6 @@ export default function ClientesAdmin() {
   const [savingCliente, setSavingCliente] = useState(false);
   const [clientError, setClientError] = useState("");
   const [activeClientMenu, setActiveClientMenu] = useState<string | null>(null);
-
-  // Guard clause por seguridad
-  if (!barberia) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   const openWhatsApp = (whatsapp: string) => {
     if (!whatsapp) return;
@@ -172,7 +163,7 @@ export default function ClientesAdmin() {
     }
   };
 
-  if (!barberia) {
+  if (barberiaLoading || !barberia) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />

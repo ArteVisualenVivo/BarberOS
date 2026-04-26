@@ -14,19 +14,10 @@ const formatLicenseCode = (value: string) => {
 export default function ActivatePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { barberia, loading: barberiaLoading } = useBarberia();
+  const { barberia, loading } = useBarberia();
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [error, setError] = useState("");
-
-  // Guard clause por seguridad
-  if (!barberia) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
@@ -92,10 +83,18 @@ export default function ActivatePage() {
     }
   };
 
-  if (authLoading || barberiaLoading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <Loader2 className="animate-spin text-primary w-12 h-12" />
+      </div>
+    );
+  }
+
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
       </div>
     );
   }

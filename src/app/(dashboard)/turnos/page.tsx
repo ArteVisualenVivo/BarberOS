@@ -32,21 +32,12 @@ import {
 type ViewMode = "lista" | "semana" | "dia";
 
 export default function TurnosAdmin() {
-  const { barberia } = useBarberia();
+  const { barberia, loading: barberiaLoading } = useBarberia();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isNuevo = searchParams.get("nuevo") === "true";
   const [turnos, setTurnos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Guard clause por seguridad
-  if (!barberia) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
   const [viewMode, setViewMode] = useState<ViewMode>("lista");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [filtro, setFiltro] = useState("todos");
@@ -170,7 +161,7 @@ export default function TurnosAdmin() {
     return a.hora.localeCompare(b.hora);
   });
 
-  if (!barberia) {
+  if (barberiaLoading || !barberia) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />

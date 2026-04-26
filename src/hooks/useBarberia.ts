@@ -5,21 +5,28 @@ import { getBarberiasByOwner } from "@/lib/tenants";
 import { useAuth } from "./useAuth";
 
 export const useBarberia = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [barberia, setBarberia] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [barberiaLoading, setBarberiaLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let active = true;
 
+    if (authLoading) {
+      setBarberiaLoading(true);
+      return () => {
+        active = false;
+      };
+    }
+
     const load = async () => {
       try {
-        setLoading(true);
+        setBarberiaLoading(true);
 
-        // Wait for user to be available
         if (!user?.uid) {
           setBarberia(null);
-          setLoading(false);
+          setBarberiaLoading(false);
           return;
         }
 
@@ -33,7 +40,7 @@ export const useBarberia = () => {
         setBarberia(null);
       } finally {
         if (active) {
-          setLoading(false);
+          setBarberiaLoading(false);
         }
       }
     };
@@ -43,7 +50,11 @@ export const useBarberia = () => {
     return () => {
       active = false;
     };
-  }, [user?.uid]);
+  }, [authLoading, user?.uid, refreshKey]);
 
-  return { barberia, loading };
+  return {
+    barberia,
+    loading: authLoading || barberiaLoading,
+    refresh: () => setRefreshKey((current) => current + 1),
+  };
 };

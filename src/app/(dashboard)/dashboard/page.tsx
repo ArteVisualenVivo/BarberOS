@@ -23,7 +23,7 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export default function DashboardPage() {
-  const { barberia } = useBarberia();
+  const { barberia, loading } = useBarberia();
   const { user, userData } = useAuth();
   const router = useRouter();
   const [origin, setOrigin] = useState("");
@@ -32,22 +32,14 @@ export default function DashboardPage() {
     clientesTotal: 0,
     ingresosEstimados: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [recientes, setRecientes] = useState<any[]>([]);
 
-  // Guard clause por seguridad
-  if (!barberia) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  const getDate = (value) => {
+  const getDate = (value: any) => {
     if (!value) return null;
     if (value.seconds) return new Date(value.seconds * 1000);
-    return new Date(value);
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
 
   useEffect(() => {
@@ -92,7 +84,7 @@ export default function DashboardPage() {
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      setStatsLoading(false);
     }
   };
 
@@ -146,7 +138,13 @@ export default function DashboardPage() {
     window.open(whatsappUrl, "_blank");
   };
 
-  console.log("BARBERIA DEBUG:", barberia);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!barberia) {
     return (
@@ -273,7 +271,7 @@ export default function DashboardPage() {
           </div>
           
           <div className="p-3">
-            {loading ? (
+            {statsLoading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="w-6 h-6 border-2 border-white/5 border-t-white rounded-full animate-spin" />
               </div>
@@ -361,16 +359,17 @@ export default function DashboardPage() {
               <Target size={120} className="text-white" />
             </div>
             {(() => {
+              const licenseExpiresAt = getDate(barberia?.licenseExpiresAt);
               const isExpired =
-                barberia?.licenseExpiresAt &&
-                getDate(barberia?.licenseExpiresAt) < new Date();
+                !!licenseExpiresAt &&
+                licenseExpiresAt < new Date();
 
               if (!isExpired && barberia?.plan === "pro") {
                 return (
                   <div>
                     <h3 className="text-sm font-bold text-white tracking-tight">Plan Activo</h3>
                     <p className="text-xs text-zinc-500 leading-relaxed mb-6 font-medium">
-                      Vence el: {getDate(barberia?.licenseExpiresAt)?.toLocaleDateString()}
+                      Vence el: {licenseExpiresAt?.toLocaleDateString()}
                     </p>
                   </div>
                 );

@@ -24,8 +24,8 @@ import {
 } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, userData, loading, logout } = useAuth();
-  const { barberia, loading: barberiaLoading } = useBarberia();
+  const { user, userData, loading: authLoading, logout } = useAuth();
+  const { barberia, loading } = useBarberia();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -35,33 +35,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (redirectRef.current) return;
 
-    // Don't redirect while loading
-    if (loading || barberiaLoading) return;
+    if (loading || authLoading) return;
 
-    // Redirect if no user
     if (!user) {
       redirectRef.current = true;
       router.push("/login");
       return;
     }
 
-    // Redirect if no barberia (should create one during register)
     if (!barberia) {
       redirectRef.current = true;
       router.push("/login");
       return;
     }
 
-    // Redirect if no dashboard access
     if (!hasDashboardAccess(barberia)) {
       redirectRef.current = true;
       router.push("/activate");
       return;
     }
-  }, [loading, barberiaLoading, user, barberia, router]);
+  }, [authLoading, loading, user, barberia, router]);
 
-  // Show loading state while data is loading
-  if (loading || barberiaLoading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
@@ -69,8 +64,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  // If we need to redirect, show nothing while redirect happens
-  if (!user || !barberia || !hasDashboardAccess(barberia)) {
+  if (!user || !barberia) {
+    return null;
+  }
+
+  if (!hasDashboardAccess(barberia)) {
     return null;
   }
 

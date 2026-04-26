@@ -38,19 +38,10 @@ const DEFAULT_HORARIOS = DIAS.reduce((acc, dia) => ({
 }), {});
 
 export default function SettingsPage() {
-  const { barberia, refresh } = useBarberia();
-  const [loading, setLoading] = useState(false);
+  const { barberia, loading, refresh } = useBarberia();
+  const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState("general"); // general, horarios, plan
-
-  // Guard clause por seguridad
-  if (!barberia) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -74,6 +65,15 @@ export default function SettingsPage() {
       .replace(/^-+|-+$/g, "");
   };
 
+  const getDate = (value: any) => {
+    if (!value) return null;
+    if (typeof value?.toDate === "function") return value.toDate();
+    if (typeof value?.seconds === "number") return new Date(value.seconds * 1000);
+
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
   useEffect(() => {
     if (barberia) {
       setFormData({
@@ -93,7 +93,7 @@ export default function SettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!barberia) return;
-    setLoading(true);
+    setSaving(true);
 
     try {
       const slugFinal = generateSlug(formData.slug || formData.nombre);
@@ -113,7 +113,7 @@ export default function SettingsPage() {
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -125,6 +125,14 @@ export default function SettingsPage() {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   if (!barberia) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -135,7 +143,8 @@ export default function SettingsPage() {
 
   const isExpired =
     barberia?.licenseExpiresAt &&
-    new Date(barberia?.licenseExpiresAt.seconds * 1000) < new Date();
+    getDate(barberia?.licenseExpiresAt) &&
+    getDate(barberia?.licenseExpiresAt)! < new Date();
 
   return (
     <div className="space-y-10">
@@ -278,10 +287,10 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3">
                     <button
                       type="submit"
-                      disabled={loading}
+                      disabled={saving}
                       className="flex items-center gap-2 bg-white text-black px-8 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-zinc-200 transition-all shadow-soft disabled:opacity-50"
                     >
-                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={14} />}
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={14} />}
                       Guardar Cambios
                     </button>
                     {success && (
@@ -355,10 +364,10 @@ export default function SettingsPage() {
                 <div className="p-6 bg-white/[0.01]">
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={saving}
                     className="flex items-center gap-2 bg-white text-black px-8 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-zinc-200 transition-all shadow-soft"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={14} />}
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={14} />}
                     Guardar Horario
                   </button>
                 </div>
@@ -411,7 +420,7 @@ export default function SettingsPage() {
                     {/* --- MEJORAR AHORA / PLAN ACTIVADO --- */}
                     {(() => {
                       // Considera activa si subscriptionStatus === 'active' o plan === 'pro' o licenseExpiresAt futura
-                      const expiresAt = barberia?.licenseExpiresAt ? new Date(barberia?.licenseExpiresAt).getTime() : 0;
+                      const expiresAt = getDate(barberia?.licenseExpiresAt)?.getTime() || 0;
                       const isLicenseActive = barberia?.subscriptionStatus === 'active' || barberia?.plan === 'pro' || (expiresAt && Date.now() < expiresAt);
                       if (isLicenseActive) {
                         return (
