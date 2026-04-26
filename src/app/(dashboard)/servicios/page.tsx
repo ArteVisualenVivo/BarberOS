@@ -35,8 +35,10 @@ export default function ServiciosAdmin() {
   }, [barberia]);
 
   const fetchServicios = async () => {
+    if (!barberia) return;
+
     try {
-      const s = await getTenantCollection(COLLECTIONS.SERVICIOS, barberia!.id);
+      const s = await getTenantCollection(COLLECTIONS.SERVICIOS, barberia.id);
       setServicios(s);
     } catch (error) {
       console.error(error);
@@ -91,6 +93,14 @@ export default function ServiciosAdmin() {
     });
     setIsModalOpen(true);
   };
+
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">

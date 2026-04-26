@@ -58,8 +58,10 @@ export default function TurnosAdmin() {
   }, [barberia]);
 
   const fetchTurnos = async () => {
+    if (!barberia) return;
+
     try {
-      const t = await getTenantCollection(COLLECTIONS.TURNOS, barberia!.id);
+      const t = await getTenantCollection(COLLECTIONS.TURNOS, barberia.id);
       setTurnos(t);
     } catch (error) {
       console.error(error);
@@ -158,6 +160,14 @@ export default function TurnosAdmin() {
     if (a.fecha !== b.fecha) return b.fecha.localeCompare(a.fecha);
     return a.hora.localeCompare(b.hora);
   });
+
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

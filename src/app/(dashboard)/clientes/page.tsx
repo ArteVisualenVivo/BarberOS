@@ -76,8 +76,10 @@ export default function ClientesAdmin() {
   }, [barberia]);
 
   const fetchClientes = async () => {
+    if (!barberia) return;
+
     try {
-      const c = await getTenantCollection(COLLECTIONS.CLIENTES, barberia!.id);
+      const c = await getTenantCollection(COLLECTIONS.CLIENTES, barberia.id);
       const clientesConFechas = c.map((current: any) => {
         return {
           ...current,
@@ -160,6 +162,14 @@ export default function ClientesAdmin() {
       setSavingCliente(false);
     }
   };
+
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

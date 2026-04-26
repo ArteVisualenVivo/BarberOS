@@ -54,10 +54,12 @@ export default function DashboardPage() {
   }, [barberia]);
 
   const fetchStats = async () => {
+    if (!barberia) return;
+
     try {
       const [turnos, clientes] = await Promise.all([
-        getTenantCollection(COLLECTIONS.TURNOS, barberia!.id),
-        getTenantCollection(COLLECTIONS.CLIENTES, barberia!.id),
+        getTenantCollection(COLLECTIONS.TURNOS, barberia.id),
+        getTenantCollection(COLLECTIONS.CLIENTES, barberia.id),
       ]);
 
       const hoy = new Date().toLocaleDateString("en-CA");
@@ -136,6 +138,14 @@ export default function DashboardPage() {
   };
 
   console.log("BARBERIA DEBUG:", barberia);
+
+  if (!barberia) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">
