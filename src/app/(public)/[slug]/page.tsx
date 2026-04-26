@@ -81,6 +81,11 @@ export default function PublicBarberiaLanding({ params }: { params: Promise<{ sl
     );
   }
 
+  // Guard clause adicional por seguridad
+  if (!barberia) {
+    return <div className="min-h-screen bg-black flex items-center justify-center text-white">Cargando...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-black font-sans">
       {/* Hero Section */}
@@ -90,21 +95,21 @@ export default function PublicBarberiaLanding({ params }: { params: Promise<{ sl
         
         <div className="relative z-10 space-y-6 animate-in fade-in zoom-in-95 duration-1000">
           <div className="bg-primary/10 w-20 h-20 rounded-[30px] flex items-center justify-center mx-auto border border-primary/20 mb-4 shadow-2xl shadow-primary/10">
-            {barberia.logoUrl ? (
-              <img src={barberia.logoUrl} alt={barberia.nombre} className="w-full h-full object-cover rounded-[30px]" />
+            {barberia?.logoUrl ? (
+              <img src={barberia.logoUrl} alt={barberia?.nombre ?? "Barbería"} className="w-full h-full object-cover rounded-[30px]" />
             ) : (
               <Scissors className="text-primary w-10 h-10" />
             )}
           </div>
           <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none">
-            {barberia.nombre}
+            {barberia?.nombre ?? "Barbería"}
           </h1>
           <div className="flex items-center justify-center gap-6 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
-            <span className="flex items-center gap-2"><MapPin className="w-3 h-3" /> {barberia.direccion || "Dirección no disponible"}</span>
+            <span className="flex items-center gap-2"><MapPin className="w-3 h-3" /> {barberia?.direccion || "Dirección no disponible"}</span>
             <span className="w-1.5 h-1.5 bg-primary rounded-full" />
             <span className="flex items-center gap-2"><ShieldCheck className="w-3 h-3" /> Verificada</span>
           </div>
-          {barberia.descripcion && (
+          {barberia?.descripcion && (
             <p className="max-w-xl mx-auto text-gray-400 font-medium text-sm leading-relaxed mt-4">
               {barberia.descripcion}
             </p>
@@ -112,9 +117,9 @@ export default function PublicBarberiaLanding({ params }: { params: Promise<{ sl
 
           {/* Botón WhatsApp Hero */}
           <div className="pt-8">
-            {barberia.telefono ? (
+            {barberia?.telefono ? (
               <a 
-                href={getWhatsAppLink(barberia.telefono, barberia.nombre)}
+                href={getWhatsAppLink(barberia.telefono, barberia?.nombre ?? "Barbería")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black uppercase text-[12px] tracking-widest hover:bg-[#20ba5a] transition-all shadow-xl shadow-[#25D366]/20 active:scale-95"
@@ -140,9 +145,9 @@ export default function PublicBarberiaLanding({ params }: { params: Promise<{ sl
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Agendas Abiertas</span>
           </div>
-          {barberia.telefono && (
+          {barberia?.telefono && (
             <a 
-              href={getWhatsAppLink(barberia.telefono, barberia.nombre)}
+              href={getWhatsAppLink(barberia.telefono, barberia?.nombre ?? "Barbería")}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] px-5 py-2.5 rounded-full border border-[#25D366]/20 hover:bg-[#25D366]/20 transition-all font-bold text-[11px] uppercase tracking-widest active:scale-95"
@@ -196,10 +201,10 @@ export default function PublicBarberiaLanding({ params }: { params: Promise<{ sl
       <footer className="max-w-5xl mx-auto px-6 py-20 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-10">
         <div className="flex items-center gap-4">
           <div className="bg-primary text-black p-2 rounded-lg font-black text-xs">B</div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Potenciado por {barberia?.nombre || "BarberOS"} SaaS</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Potenciado por {barberia?.nombre ?? "BarberOS"} SaaS</p>
         </div>
         <div className="flex gap-8">
-          {barberia.telefono && (
+          {barberia?.telefono && (
             <a href={`tel:${barberia.telefono}`} className="text-gray-600 hover:text-white transition-colors"><Phone className="w-5 h-5" /></a>
           )}
           <Link href={`/login`} className="text-gray-600 hover:text-white transition-colors text-[10px] font-black uppercase tracking-widest">Panel Dueño</Link>
