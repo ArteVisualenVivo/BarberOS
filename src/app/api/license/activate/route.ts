@@ -19,6 +19,7 @@ export async function POST(req: Request) {
     const normalizedCode = String(code).toUpperCase().trim();
 
     let licenseSnap;
+
     try {
       const licenseRef = db.collection("licenses").doc(normalizedCode);
       licenseSnap = await licenseRef.get();
@@ -53,31 +54,21 @@ export async function POST(req: Request) {
       );
     }
 
-    if (license.status && license.status !== "active") {
+    // 🚨 SOLO VALIDACIÓN REAL: ya usada o no
+    if (license.used === true) {
       return NextResponse.json(
-        { ok: false, error: "invalid_code" },
+        { ok: false, error: "license_already_used" },
         { status: 400 }
       );
     }
 
+    // (opcional) expiración simple
     if (license.expiresAt) {
-      let expiresDate: Date | null = null;
+      const expiresDate = license.expiresAt.toDate
+        ? license.expiresAt.toDate()
+        : new Date(license.expiresAt);
 
-      try {
-        if (typeof license.expiresAt?.toDate === "function") {
-          expiresDate = license.expiresAt.toDate();
-        } else if (license.expiresAt instanceof Date) {
-          expiresDate = license.expiresAt;
-        } else if (typeof license.expiresAt === "number") {
-          expiresDate = new Date(license.expiresAt);
-        } else if (typeof license.expiresAt === "string") {
-          expiresDate = new Date(license.expiresAt);
-        }
-      } catch {
-        expiresDate = null;
-      }
-
-      if (expiresDate && expiresDate.getTime() < Date.now()) {
+      if (expiresDate.getTime() < Date.now()) {
         return NextResponse.json(
           { ok: false, error: "expired_license" },
           { status: 400 }
@@ -85,7 +76,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 🔥 FIX CLAVE: update → set (evita NOT_FOUND)
+    // 🔥 ACTIVAR BARBERÍA EN BARBEROS
     await db.collection("barberias").doc(barberiaId).set(
       {
         licenseCode: normalizedCode,
