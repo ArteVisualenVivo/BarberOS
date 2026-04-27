@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getTenantCollection, COLLECTIONS } from "@/lib/db";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { 
   TrendingUp, 
   Calendar, 
@@ -21,6 +23,14 @@ import {
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+
+const getTodayIsoDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export default function DashboardPage() {
   const { barberia, loading } = useBarberia();
@@ -58,12 +68,24 @@ export default function DashboardPage() {
     if (!barberia) return;
 
     try {
-      const [turnos, clientes] = await Promise.all([
-        getTenantCollection(COLLECTIONS.TURNOS, barberia?.id),
-        getTenantCollection(COLLECTIONS.CLIENTES, barberia?.id),
+      const turnosQuery = query(
+        collection(db, COLLECTIONS.TURNOS),
+        where("barberiaId", "==", barberia.id),
+        orderBy("fecha", "asc"),
+        orderBy("hora", "asc")
+      );
+
+      const [turnosSnapshot, clientes] = await Promise.all([
+        getDocs(turnosQuery),
+        getTenantCollection(COLLECTIONS.CLIENTES, barberia.id),
       ]);
 
-      const hoy = new Date().toLocaleDateString("en-CA");
+      const turnos = turnosSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      const hoy = getTodayIsoDate();
       const turnosHoy = turnos.filter((t: any) => t.fecha === hoy);
       const ingresos = turnos.reduce((acc: number, t: any) => acc + (Number(t.precio) || 0), 0);
 
@@ -73,14 +95,7 @@ export default function DashboardPage() {
         ingresosEstimados: ingresos,
       });
       
-      // Ordenar por fecha y hora descendente para mostrar los más recientes/próximos
-      const sortedTurnos = [...turnos].sort((a, b) => {
-        const dateA = `${a.fecha}T${a.hora}`;
-        const dateB = `${b.fecha}T${b.hora}`;
-        return dateB.localeCompare(dateA);
-      });
-      
-      setRecientes(sortedTurnos.slice(0, 5));
+      setRecientes(turnos.slice(0, 5));
     } catch (error) {
       console.error(error);
     } finally {

@@ -49,6 +49,8 @@ const formatDateUI = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
+const buildSlotKey = (dateString: string, timeString: string) => `${dateString}_${timeString}`;
+
 function ReservaContent({ slug }: { slug: string }) {
   const router = useRouter();
 
@@ -161,6 +163,8 @@ function ReservaContent({ slug }: { slug: string }) {
     setSaving(true);
 
     try {
+      const slotKey = buildSlotKey(fecha, hora);
+
       const limitCheck = await checkPlanLimits(barberia.id, "create_turno");
 
       if (!limitCheck.allowed) {
@@ -172,14 +176,21 @@ function ReservaContent({ slug }: { slug: string }) {
         collection(db, "turnos"),
         where("barberiaId", "==", barberia.id),
         where("fecha", "==", fecha),
-        where("hora", "==", hora),
-        where("estado", "in", ["pendiente", "confirmado"])
+        where("hora", "==", hora)
       );
 
       const snapshot = await getDocs(q);
 
-      if (!snapshot.empty) {
-        alert("Ese horario ya esta ocupado. Por favor elige otro.");
+      const slotKeyQuery = query(
+        collection(db, "turnos"),
+        where("barberiaId", "==", barberia.id),
+        where("slotKey", "==", slotKey)
+      );
+
+      const slotKeySnapshot = await getDocs(slotKeyQuery);
+
+      if (!snapshot.empty || !slotKeySnapshot.empty) {
+        alert("Horario no disponible");
         setStep(2);
         fetchSlots();
         return;
@@ -195,6 +206,7 @@ function ReservaContent({ slug }: { slug: string }) {
         clienteWhatsapp: cliente.whatsapp,
         fecha,
         hora,
+        slotKey,
         estado: "pendiente",
         createdAt: serverTimestamp()
       });
