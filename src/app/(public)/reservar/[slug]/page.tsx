@@ -27,6 +27,23 @@ interface Servicio {
   barberiaId: string;
 }
 
+const getTodayIsoDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const addDaysToIsoDate = (isoDate: string, days: number) => {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const nextDate = new Date(year, month - 1, day + days);
+  const nextYear = nextDate.getFullYear();
+  const nextMonth = String(nextDate.getMonth() + 1).padStart(2, "0");
+  const nextDay = String(nextDate.getDate()).padStart(2, "0");
+  return `${nextYear}-${nextMonth}-${nextDay}`;
+};
+
 function ReservaContent({ slug }: { slug: string }) {
   const router = useRouter();
 
@@ -38,7 +55,7 @@ function ReservaContent({ slug }: { slug: string }) {
   const [notFound, setNotFound] = useState(false);
   const [slugError, setSlugError] = useState(false);
 
-  const [fecha, setFecha] = useState(new Date().toLocaleDateString("en-CA"));
+  const [fecha, setFecha] = useState(getTodayIsoDate());
   const [hora, setHora] = useState("");
   const [cliente, setCliente] = useState({ nombre: "", whatsapp: "" });
   const [saving, setSaving] = useState(false);
@@ -360,7 +377,7 @@ function ReservaContent({ slug }: { slug: string }) {
                   </label>
                   <input
                     type="date"
-                    min={new Date().toLocaleDateString("en-CA")}
+                    min={getTodayIsoDate()}
                     className="w-full bg-black border border-white/10 rounded-2xl p-4 text-white focus:border-primary outline-none transition-all"
                     value={fecha}
                     onChange={(e) => setFecha(e.target.value)}
@@ -401,9 +418,7 @@ function ReservaContent({ slug }: { slug: string }) {
                       <button
                         type="button"
                         onClick={() => {
-                          const d = new Date(fecha);
-                          d.setDate(d.getDate() + 1);
-                          setFecha(d.toLocaleDateString("en-CA"));
+                          setFecha(addDaysToIsoDate(fecha, 1));
                         }}
                         className="bg-red-500/20 text-red-500 px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-red-500/30 transition-all"
                       >
@@ -451,12 +466,7 @@ function ReservaContent({ slug }: { slug: string }) {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
                     <span className="text-white font-black text-sm">
-                      {new Date(fecha).toLocaleDateString("es-ES", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
+                      {fecha}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -532,12 +542,7 @@ function ReservaContent({ slug }: { slug: string }) {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
                   <span className="text-white font-black text-sm">
-                    {new Date(fecha).toLocaleDateString("es-ES", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                    {fecha}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
