@@ -58,7 +58,7 @@ function ReservaContent({ slug }: { slug: string }) {
   const [step, setStep] = useState(1);
   const [barberia, setBarberia] = useState<Barberia | null>(null);
   const [servicios, setServicios] = useState<Servicio[]>([]);
-  const [servicioSeleccionado, setServicioSeleccionado] = useState<Servicio | null>(null);
+  const [serviciosSeleccionados, setServiciosSeleccionados] = useState<Servicio[]>([]);
   const [notFound, setNotFound] = useState(false);
   const [slugError, setSlugError] = useState(false);
 
@@ -71,16 +71,19 @@ function ReservaContent({ slug }: { slug: string }) {
   const [closeBlocked, setCloseBlocked] = useState(false);
 
   const serviciosSafe = servicios ?? [];
+  const serviciosSeleccionadosSafe = serviciosSeleccionados ?? [];
+  const totalPrecio = serviciosSeleccionadosSafe.reduce((total, servicio) => total + (Number(servicio.precio) || 0), 0);
+  const totalDuracion = serviciosSeleccionadosSafe.reduce((total, servicio) => total + (Number(servicio.duracion) || 0), 0);
 
   useEffect(() => {
     fetchInitialData();
   }, [slug]);
 
   useEffect(() => {
-    if (barberia && servicioSeleccionado && fecha) {
+    if (barberia && serviciosSeleccionadosSafe.length > 0 && fecha) {
       fetchSlots();
     }
-  }, [barberia, servicioSeleccionado, fecha]);
+  }, [barberia, fecha, serviciosSeleccionadosSafe]);
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -88,7 +91,7 @@ function ReservaContent({ slug }: { slug: string }) {
     setSlugError(false);
     setBarberia(null);
     setServicios([]);
-    setServicioSeleccionado(null);
+    setServiciosSeleccionados([]);
     setAvailableSlots([]);
     setHora("");
 
@@ -128,7 +131,7 @@ function ReservaContent({ slug }: { slug: string }) {
   };
 
   const fetchSlots = async () => {
-    if (!barberia || !servicioSeleccionado) return;
+    if (!barberia || serviciosSeleccionadosSafe.length === 0) return;
 
     setLoadingSlots(true);
 
@@ -136,7 +139,7 @@ function ReservaContent({ slug }: { slug: string }) {
       const slots = await getAvailableSlots(
         barberia.id,
         fecha,
-        servicioSeleccionado.duracion || 30
+        totalDuracion || 30
       );
 
       setAvailableSlots(slots);
@@ -152,13 +155,21 @@ function ReservaContent({ slug }: { slug: string }) {
   };
 
   const handleSeleccionarServicio = (servicio: Servicio) => {
-    setServicioSeleccionado(servicio);
+    setServiciosSeleccionados((current) => {
+      const exists = current.some((item) => item.id === servicio.id);
+
+      if (exists) {
+        return current.filter((item) => item.id !== servicio.id);
+      }
+
+      return [...current, servicio];
+    });
     setHora("");
     setAvailableSlots([]);
   };
 
   const handleConfirmar = async () => {
-    if (!barberia || !servicioSeleccionado) return;
+    if (!barberia || serviciosSeleccionadosSafe.length === 0) return;
 
     setSaving(true);
 
@@ -198,10 +209,16 @@ function ReservaContent({ slug }: { slug: string }) {
 
       await addDoc(collection(db, "turnos"), {
         barberiaId: barberia.id,
-        servicioId: servicioSeleccionado.id,
-        servicioNombre: servicioSeleccionado.nombre,
-        precio: Number(servicioSeleccionado.precio),
-        duracion: Number(servicioSeleccionado.duracion) || 30,
+        servicioIds: serviciosSeleccionadosSafe.map((servicio) => servicio.id),
+        servicioNombre: serviciosSeleccionadosSafe.map((servicio) => servicio.nombre).join(" + "),
+        servicios: serviciosSeleccionadosSafe.map((servicio) => ({
+          id: servicio.id,
+          nombre: servicio.nombre,
+          precio: Number(servicio.precio) || 0,
+          duracion: Number(servicio.duracion) || 0,
+        })),
+        precio: totalPrecio,
+        duracion: totalDuracion || 30,
         clienteNombre: cliente.nombre,
         clienteWhatsapp: cliente.whatsapp,
         fecha,
@@ -289,7 +306,7 @@ function ReservaContent({ slug }: { slug: string }) {
           <div className="bg-primary/10 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto border border-primary/20 mb-2">
             <Scissors className="text-primary w-8 h-8" />
           </div>
-          <h1 className="text-4xl font-black uppercase tracking-tight">{barberia?.nombre ?? "Barberia"}</h1>
+          <h1 className="text-4xl font-black uppercase tracking-tight">{barberia.nombre ?? "Barberia"}</h1>
           <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
             Reserva tu turno en simples pasos
           </p>
@@ -317,17 +334,17 @@ function ReservaContent({ slug }: { slug: string }) {
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-2">
                 <h2 className="text-3xl font-black uppercase tracking-tight">
-                  Elegi tu <span className="text-primary">Servicio</span>
+                  Elegi tus <span className="text-primary">Servicios</span>
                 </h2>
                 <p className="text-sm text-gray-500">
-                  Selecciona el servicio que quieres reservar antes de continuar.
+                  Selecciona uno o varios servicios antes de continuar.
                 </p>
               </div>
 
               {serviciosSafe.length > 0 ? (
                 <div className="grid gap-4">
                   {serviciosSafe.map((servicio) => {
-                    const isSelected = servicioSeleccionado?.id === servicio.id;
+                    const isSelected = serviciosSeleccionadosSafe.some((item) => item.id === servicio.id);
 
                     return (
                       <button
@@ -341,14 +358,23 @@ function ReservaContent({ slug }: { slug: string }) {
                         }`}
                       >
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                          <div className="space-y-1">
-                            <p className="text-lg font-black uppercase tracking-tight text-white">{servicio.nombre}</p>
-                            <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-wider text-gray-500">
-                              <span className="flex items-center gap-2">
-                                <Clock className="w-3 h-3" />
-                                {servicio.duracion} min
-                              </span>
-                              <span className="text-primary">${servicio.precio}</span>
+                          <div className="flex items-start gap-4">
+                            <input
+                              type="checkbox"
+                              readOnly
+                              checked={isSelected}
+                              aria-label={`Seleccionar ${servicio.nombre}`}
+                              className="mt-1 h-5 w-5 rounded border-white/20 bg-black accent-primary"
+                            />
+                            <div className="space-y-1">
+                              <p className="text-lg font-black uppercase tracking-tight text-white">{servicio.nombre}</p>
+                              <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+                                <span className="flex items-center gap-2">
+                                  <Clock className="w-3 h-3" />
+                                  {servicio.duracion} min
+                                </span>
+                                <span className="text-primary">${servicio.precio}</span>
+                              </div>
                             </div>
                           </div>
                           {isSelected && (
@@ -368,10 +394,29 @@ function ReservaContent({ slug }: { slug: string }) {
                 </div>
               )}
 
+              {serviciosSeleccionadosSafe.length > 0 && (
+                <div className="rounded-3xl border border-primary/20 bg-primary/5 p-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-primary/70">Servicios seleccionados</p>
+                      <p className="mt-2 text-sm font-bold text-white">
+                        {serviciosSeleccionadosSafe.map((servicio) => servicio.nombre).join(" + ")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Total</p>
+                      <p className="mt-2 text-sm font-black text-primary">
+                        {totalDuracion} min / ${totalPrecio}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end">
                 <button
                   onClick={() => setStep(2)}
-                  disabled={!servicioSeleccionado}
+                  disabled={serviciosSeleccionadosSafe.length === 0}
                   className="flex items-center gap-2 bg-primary text-black px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continuar <ChevronRight className="w-4 h-4" />
@@ -380,7 +425,7 @@ function ReservaContent({ slug }: { slug: string }) {
             </div>
           )}
 
-          {step === 2 && servicioSeleccionado && (
+          {step === 2 && serviciosSeleccionadosSafe.length > 0 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-2">
                 <h2 className="text-3xl font-black uppercase tracking-tight">
@@ -390,11 +435,21 @@ function ReservaContent({ slug }: { slug: string }) {
 
               <div className="space-y-6">
                 <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Servicio elegido</p>
-                  <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-white font-black text-lg">{servicioSeleccionado.nombre}</span>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Servicios elegidos</p>
+                  <div className="mt-3 space-y-3">
+                    {serviciosSeleccionadosSafe.map((servicio) => (
+                      <div key={servicio.id} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="text-white font-black text-lg">{servicio.nombre}</span>
+                        <span className="text-primary font-black text-sm">
+                          {servicio.duracion} min / ${servicio.precio}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 border-t border-white/10 pt-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Total</span>
                     <span className="text-primary font-black text-sm">
-                      {servicioSeleccionado.duracion} min · ${servicioSeleccionado.precio}
+                      {totalDuracion} min / ${totalPrecio}
                     </span>
                   </div>
                 </div>
@@ -477,7 +532,7 @@ function ReservaContent({ slug }: { slug: string }) {
             </div>
           )}
 
-          {step === 3 && servicioSeleccionado && (
+          {step === 3 && serviciosSeleccionadosSafe.length > 0 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-2">
                 <h2 className="text-3xl font-black uppercase tracking-tight">
@@ -487,9 +542,21 @@ function ReservaContent({ slug }: { slug: string }) {
 
               <div className="space-y-6">
                 <div className="bg-white/5 p-6 rounded-2xl space-y-4">
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Servicios</span>
+                    <div className="text-right">
+                      {serviciosSeleccionadosSafe.map((servicio) => (
+                        <span key={servicio.id} className="block text-white font-black text-sm">
+                          {servicio.nombre}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Servicio</span>
-                    <span className="text-white font-black text-sm">{servicioSeleccionado.nombre}</span>
+                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Total</span>
+                    <span className="text-white font-black text-sm">
+                      {totalDuracion} min / ${totalPrecio}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
@@ -552,7 +619,7 @@ function ReservaContent({ slug }: { slug: string }) {
             </div>
           )}
 
-          {step === 4 && servicioSeleccionado && (
+          {step === 4 && serviciosSeleccionadosSafe.length > 0 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 text-center">
               <div className="space-y-4">
                 <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
@@ -563,9 +630,21 @@ function ReservaContent({ slug }: { slug: string }) {
               </div>
 
               <div className="bg-white/5 p-6 rounded-2xl space-y-4">
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Servicios</span>
+                  <div className="text-right">
+                    {serviciosSeleccionadosSafe.map((servicio) => (
+                      <span key={servicio.id} className="block text-white font-black text-sm">
+                        {servicio.nombre}
+                      </span>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Servicio</span>
-                  <span className="text-white font-black text-sm">{servicioSeleccionado.nombre}</span>
+                  <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Total</span>
+                  <span className="text-white font-black text-sm">
+                    {totalDuracion} min / ${totalPrecio}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
