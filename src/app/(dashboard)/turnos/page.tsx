@@ -135,6 +135,12 @@ export default function TurnosAdmin() {
     }
   };
 
+  const formatDateUI = (dateString?: string) => {
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
+    return `${day}/${month}/${year}`;
+  };
+
   const formatFecha = (date: Date) => date.toLocaleDateString("en-CA");
   
   const getWeekDays = (date: Date) => {
@@ -384,7 +390,7 @@ export default function TurnosAdmin() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="text-xs text-zinc-300 font-bold">{t.fecha}</span>
+                          <span className="text-xs text-zinc-300 font-bold">{formatDateUI(t.fecha)}</span>
                           <span className="text-[10px] text-zinc-500 font-medium mt-1 uppercase">{t.hora} HS</span>
                         </div>
                       </td>
@@ -458,7 +464,7 @@ export default function TurnosAdmin() {
                       <CalendarIcon size={12} />
                       <span className="text-[9px] font-bold uppercase tracking-widest">Fecha</span>
                     </div>
-                    <p className="text-xs font-bold text-white">{t.fecha}</p>
+                    <p className="text-xs font-bold text-white">{formatDateUI(t.fecha)}</p>
                   </div>
                   <div className="bg-white/[0.02] border border-white/[0.05] p-3 rounded-xl">
                     <div className="flex items-center gap-2 text-zinc-600 mb-1.5">
