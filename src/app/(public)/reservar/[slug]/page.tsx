@@ -3,8 +3,8 @@
 import { useState, useEffect, Suspense, use } from "react";
 import { getBarberiaBySlug, Barberia } from "@/lib/tenants";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
-import { useSearchParams, useRouter } from "next/navigation";
+import { addDoc, collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 import { getAvailableSlots } from "@/services/agenda.service";
 import { checkPlanLimits } from "@/services/plans.service";
 import {
@@ -28,14 +28,13 @@ interface Servicio {
 }
 
 function ReservaContent({ slug }: { slug: string }) {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const servicioId = searchParams.get("id");
 
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1);
-  const [servicio, setServicio] = useState<Servicio | null>(null);
   const [barberia, setBarberia] = useState<Barberia | null>(null);
+  const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [servicioSeleccionado, setServicioSeleccionado] = useState<Servicio | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [slugError, setSlugError] = useState(false);
 
@@ -46,22 +45,27 @@ function ReservaContent({ slug }: { slug: string }) {
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
-  useEffect(() => {
-    fetchInitialData();
-  }, [slug, servicioId]);
+  const serviciosSafe = servicios ?? [];
 
   useEffect(() => {
-    if (barberia && servicio && fecha) {
+    fetchInitialData();
+  }, [slug]);
+
+  useEffect(() => {
+    if (barberia && servicioSeleccionado && fecha) {
       fetchSlots();
     }
-  }, [barberia, servicio, fecha]);
+  }, [barberia, servicioSeleccionado, fecha]);
 
   const fetchInitialData = async () => {
     setLoading(true);
     setNotFound(false);
     setSlugError(false);
     setBarberia(null);
-    setServicio(null);
+    setServicios([]);
+    setServicioSeleccionado(null);
+    setAvailableSlots([]);
+    setHora("");
 
     try {
       if (!slug || !slug.trim()) {
@@ -70,23 +74,28 @@ function ReservaContent({ slug }: { slug: string }) {
         return;
       }
 
-      const b = await getBarberiaBySlug(slug);
+      const barberiaData = await getBarberiaBySlug(slug);
 
-      if (b && b.id) {
-        setBarberia(b);
-
-        if (servicioId) {
-          const sSnap = await getDoc(doc(db, "servicios", servicioId));
-
-          if (sSnap.exists()) {
-            setServicio({ id: sSnap.id, ...(sSnap.data() as Omit<Servicio, "id">) });
-          }
-        }
-      } else {
+      if (!barberiaData?.id) {
         setNotFound(true);
+        return;
       }
+
+      setBarberia(barberiaData);
+
+      const serviciosQuery = query(
+        collection(db, "servicios"),
+        where("barberiaId", "==", barberiaData.id)
+      );
+      const serviciosSnapshot = await getDocs(serviciosQuery);
+      const serviciosData = serviciosSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Servicio, "id">),
+      }));
+
+      setServicios(serviciosData);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching reservation data:", error);
       setNotFound(true);
     } finally {
       setLoading(false);
@@ -94,12 +103,17 @@ function ReservaContent({ slug }: { slug: string }) {
   };
 
   const fetchSlots = async () => {
-    if (!barberia || !servicio) return;
+    if (!barberia || !servicioSeleccionado) return;
 
     setLoadingSlots(true);
 
     try {
-      const slots = await getAvailableSlots(barberia.id, fecha, servicio.duracion || 30);
+      const slots = await getAvailableSlots(
+        barberia.id,
+        fecha,
+        servicioSeleccionado.duracion || 30
+      );
+
       setAvailableSlots(slots);
 
       if (!slots.includes(hora)) {
@@ -112,8 +126,14 @@ function ReservaContent({ slug }: { slug: string }) {
     }
   };
 
+  const handleSeleccionarServicio = (servicio: Servicio) => {
+    setServicioSeleccionado(servicio);
+    setHora("");
+    setAvailableSlots([]);
+  };
+
   const handleConfirmar = async () => {
-    if (!barberia || !servicio) return;
+    if (!barberia || !servicioSeleccionado) return;
 
     setSaving(true);
 
@@ -137,17 +157,17 @@ function ReservaContent({ slug }: { slug: string }) {
 
       if (!snapshot.empty) {
         alert("Ese horario ya esta ocupado. Por favor elige otro.");
-        setStep(1);
+        setStep(2);
         fetchSlots();
         return;
       }
 
       await addDoc(collection(db, "turnos"), {
         barberiaId: barberia.id,
-        servicioId: servicio.id,
-        servicioNombre: servicio.nombre,
-        precio: Number(servicio.precio),
-        duracion: Number(servicio.duracion) || 30,
+        servicioId: servicioSeleccionado.id,
+        servicioNombre: servicioSeleccionado.nombre,
+        precio: Number(servicioSeleccionado.precio),
+        duracion: Number(servicioSeleccionado.duracion) || 30,
         clienteNombre: cliente.nombre,
         clienteWhatsapp: cliente.whatsapp,
         fecha,
@@ -217,37 +237,21 @@ function ReservaContent({ slug }: { slug: string }) {
     );
   }
 
-  if (!servicio) {
-    return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center p-6 space-y-6">
-        <Scissors className="text-red-500 w-16 h-16" />
-        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Servicio no disponible</h1>
-        <p className="text-gray-500 max-w-xs mx-auto">No encontramos el servicio seleccionado para esta reserva.</p>
-        <button
-          onClick={() => router.back()}
-          className="bg-primary text-black px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest"
-        >
-          Volver
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-black text-white font-sans px-6 py-12">
-      <div className="max-w-2xl mx-auto space-y-12">
+      <div className="max-w-3xl mx-auto space-y-12">
         <div className="text-center space-y-4">
           <div className="bg-primary/10 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto border border-primary/20 mb-2">
             <Scissors className="text-primary w-8 h-8" />
           </div>
           <h1 className="text-4xl font-black uppercase tracking-tight">{barberia?.nombre ?? "Barberia"}</h1>
           <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
-            Reservando: <span className="text-primary">{servicio.nombre}</span>
+            Reserva tu turno en simples pasos
           </p>
         </div>
 
         {step < 4 && (
-          <div className="flex items-center justify-between px-10">
+          <div className="flex items-center justify-between px-4 sm:px-10">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-2">
                 <div
@@ -268,11 +272,88 @@ function ReservaContent({ slug }: { slug: string }) {
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-2">
                 <h2 className="text-3xl font-black uppercase tracking-tight">
+                  Elegi tu <span className="text-primary">Servicio</span>
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Selecciona el servicio que quieres reservar antes de continuar.
+                </p>
+              </div>
+
+              {serviciosSafe.length > 0 ? (
+                <div className="grid gap-4">
+                  {serviciosSafe.map((servicio) => {
+                    const isSelected = servicioSeleccionado?.id === servicio.id;
+
+                    return (
+                      <button
+                        key={servicio.id}
+                        type="button"
+                        onClick={() => handleSeleccionarServicio(servicio)}
+                        className={`w-full rounded-3xl border p-5 text-left transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/10 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]"
+                            : "border-white/10 bg-black hover:border-primary/40"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div className="space-y-1">
+                            <p className="text-lg font-black uppercase tracking-tight text-white">{servicio.nombre}</p>
+                            <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+                              <span className="flex items-center gap-2">
+                                <Clock className="w-3 h-3" />
+                                {servicio.duracion} min
+                              </span>
+                              <span className="text-primary">${servicio.precio}</span>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <span className="inline-flex items-center justify-center rounded-full bg-primary px-3 py-1 text-[10px] font-black uppercase tracking-widest text-black">
+                              Seleccionado
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
+                  <p className="text-sm font-bold text-white">Esta barberia todavia no tiene servicios publicados.</p>
+                  <p className="mt-2 text-xs text-gray-500">Prueba mas tarde o contacta al negocio directamente.</p>
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={!servicioSeleccionado}
+                  className="flex items-center gap-2 bg-primary text-black px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Continuar <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && servicioSeleccionado && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-black uppercase tracking-tight">
                   Fecha y <span className="text-primary">Hora</span>
                 </h2>
               </div>
 
               <div className="space-y-6">
+                <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Servicio elegido</p>
+                  <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-white font-black text-lg">{servicioSeleccionado.nombre}</span>
+                    <span className="text-primary font-black text-sm">
+                      {servicioSeleccionado.duracion} min · ${servicioSeleccionado.precio}
+                    </span>
+                  </div>
+                </div>
+
                 <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
                     <Calendar className="w-3 h-3" /> Dia del Turno
@@ -296,17 +377,18 @@ function ReservaContent({ slug }: { slug: string }) {
                     </div>
                   ) : availableSlots.length > 0 ? (
                     <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                      {availableSlots.map((h) => (
+                      {availableSlots.map((slot) => (
                         <button
-                          key={h}
-                          onClick={() => setHora(h)}
+                          key={slot}
+                          type="button"
+                          onClick={() => setHora(slot)}
                           className={`py-3 rounded-xl font-black text-xs transition-all border ${
-                            hora === h
+                            hora === slot
                               ? "bg-primary text-black border-primary"
                               : "bg-black text-gray-400 border-white/5 hover:border-primary/30"
                           }`}
                         >
-                          {h}
+                          {slot}
                         </button>
                       ))}
                     </div>
@@ -317,6 +399,7 @@ function ReservaContent({ slug }: { slug: string }) {
                         No hay horarios disponibles para esta fecha
                       </p>
                       <button
+                        type="button"
                         onClick={() => {
                           const d = new Date(fecha);
                           d.setDate(d.getDate() + 1);
@@ -331,9 +414,17 @@ function ReservaContent({ slug }: { slug: string }) {
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-between">
                 <button
-                  onClick={() => setStep(2)}
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="flex items-center gap-2 bg-white/5 text-white px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-white/10 transition-all"
+                >
+                  <ChevronRight className="w-4 h-4 rotate-180" /> Volver
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep(3)}
                   disabled={!hora}
                   className="flex items-center gap-2 bg-primary text-black px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -343,7 +434,7 @@ function ReservaContent({ slug }: { slug: string }) {
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && servicioSeleccionado && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-2">
                 <h2 className="text-3xl font-black uppercase tracking-tight">
@@ -352,6 +443,28 @@ function ReservaContent({ slug }: { slug: string }) {
               </div>
 
               <div className="space-y-6">
+                <div className="bg-white/5 p-6 rounded-2xl space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Servicio</span>
+                    <span className="text-white font-black text-sm">{servicioSeleccionado.nombre}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
+                    <span className="text-white font-black text-sm">
+                      {new Date(fecha).toLocaleDateString("es-ES", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Hora</span>
+                    <span className="text-white font-black text-sm">{hora}</span>
+                  </div>
+                </div>
+
                 <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
                     <User className="w-3 h-3" /> Nombre Completo
@@ -382,79 +495,16 @@ function ReservaContent({ slug }: { slug: string }) {
 
               <div className="flex justify-between">
                 <button
-                  onClick={() => setStep(1)}
-                  className="flex items-center gap-2 bg-white/5 text-white px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-white/10 transition-all"
-                >
-                  <ChevronRight className="w-4 h-4 rotate-180" /> Volver
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  disabled={!cliente.nombre || !cliente.whatsapp}
-                  className="flex items-center gap-2 bg-primary text-black px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Continuar <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-black uppercase tracking-tight">
-                  Confirmar <span className="text-primary">Reserva</span>
-                </h2>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-white/5 p-6 rounded-2xl space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Servicio</span>
-                    <span className="text-white font-black text-sm">{servicio.nombre}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
-                    <span className="text-white font-black text-sm">
-                      {new Date(fecha).toLocaleDateString("es-ES", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Hora</span>
-                    <span className="text-white font-black text-sm">{hora}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Precio</span>
-                    <span className="text-primary font-black text-sm">${servicio.precio}</span>
-                  </div>
-                </div>
-
-                <div className="bg-white/5 p-6 rounded-2xl space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Cliente</span>
-                    <span className="text-white font-black text-sm">{cliente.nombre}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">WhatsApp</span>
-                    <span className="text-white font-black text-sm">{cliente.whatsapp}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between">
-                <button
+                  type="button"
                   onClick={() => setStep(2)}
                   className="flex items-center gap-2 bg-white/5 text-white px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-white/10 transition-all"
                 >
                   <ChevronRight className="w-4 h-4 rotate-180" /> Volver
                 </button>
                 <button
+                  type="button"
                   onClick={handleConfirmar}
-                  disabled={saving}
+                  disabled={saving || !cliente.nombre || !cliente.whatsapp}
                   className="flex items-center gap-2 bg-primary text-black px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
@@ -464,7 +514,7 @@ function ReservaContent({ slug }: { slug: string }) {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 4 && servicioSeleccionado && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 text-center">
               <div className="space-y-4">
                 <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
@@ -477,7 +527,7 @@ function ReservaContent({ slug }: { slug: string }) {
               <div className="bg-white/5 p-6 rounded-2xl space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Servicio</span>
-                  <span className="text-white font-black text-sm">{servicio.nombre}</span>
+                  <span className="text-white font-black text-sm">{servicioSeleccionado.nombre}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
@@ -497,6 +547,7 @@ function ReservaContent({ slug }: { slug: string }) {
               </div>
 
               <button
+                type="button"
                 onClick={() => router.push("/")}
                 className="bg-primary text-black px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-primary/90 transition-all"
               >
