@@ -44,6 +44,11 @@ const addDaysToIsoDate = (isoDate: string, days: number) => {
   return `${nextYear}-${nextMonth}-${nextDay}`;
 };
 
+const formatDateUI = (dateString: string) => {
+  const [year, month, day] = dateString.split("-");
+  return `${day}/${month}/${year}`;
+};
+
 function ReservaContent({ slug }: { slug: string }) {
   const router = useRouter();
 
@@ -466,7 +471,7 @@ function ReservaContent({ slug }: { slug: string }) {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
                     <span className="text-white font-black text-sm">
-                      {fecha}
+                      {formatDateUI(fecha)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -542,7 +547,7 @@ function ReservaContent({ slug }: { slug: string }) {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
                   <span className="text-white font-black text-sm">
-                    {fecha}
+                    {formatDateUI(fecha)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
