@@ -34,12 +34,11 @@ function ReservaContent({ slug }: { slug: string }) {
 
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1);
-  const [servicio, setServicio] = useState<any>(null);
+  const [servicio, setServicio] = useState<Servicio | null>(null);
   const [barberia, setBarberia] = useState<Barberia | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [slugError, setSlugError] = useState(false);
 
-  // Form states
   const [fecha, setFecha] = useState(new Date().toLocaleDateString("en-CA"));
   const [hora, setHora] = useState("");
   const [cliente, setCliente] = useState({ nombre: "", whatsapp: "" });
@@ -58,6 +57,12 @@ function ReservaContent({ slug }: { slug: string }) {
   }, [barberia, servicio, fecha]);
 
   const fetchInitialData = async () => {
+    setLoading(true);
+    setNotFound(false);
+    setSlugError(false);
+    setBarberia(null);
+    setServicio(null);
+
     try {
       if (!slug || !slug.trim()) {
         setSlugError(true);
@@ -66,12 +71,15 @@ function ReservaContent({ slug }: { slug: string }) {
       }
 
       const b = await getBarberiaBySlug(slug);
+
       if (b && b.id) {
         setBarberia(b);
+
         if (servicioId) {
           const sSnap = await getDoc(doc(db, "servicios", servicioId));
+
           if (sSnap.exists()) {
-            setServicio({ id: sSnap.id, ...sSnap.data() });
+            setServicio({ id: sSnap.id, ...(sSnap.data() as Omit<Servicio, "id">) });
           }
         }
       } else {
@@ -87,11 +95,16 @@ function ReservaContent({ slug }: { slug: string }) {
 
   const fetchSlots = async () => {
     if (!barberia || !servicio) return;
+
     setLoadingSlots(true);
+
     try {
-      const slots = await getAvailableSlots(barberia?.id, fecha, servicio.duracion || 30);
+      const slots = await getAvailableSlots(barberia.id, fecha, servicio.duracion || 30);
       setAvailableSlots(slots);
-      if (!slots.includes(hora)) setHora("");
+
+      if (!slots.includes(hora)) {
+        setHora("");
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -101,34 +114,36 @@ function ReservaContent({ slug }: { slug: string }) {
 
   const handleConfirmar = async () => {
     if (!barberia || !servicio) return;
+
     setSaving(true);
+
     try {
-      // 0. Verificar límites de plan
-      const limitCheck = await checkPlanLimits(barberia?.id, "create_turno");
+      const limitCheck = await checkPlanLimits(barberia.id, "create_turno");
+
       if (!limitCheck.allowed) {
         alert(limitCheck.reason);
         return;
       }
 
-      // 0.5 Verificar solapamiento (Double check)
       const q = query(
         collection(db, "turnos"),
-        where("barberiaId", "==", barberia?.id),
+        where("barberiaId", "==", barberia.id),
         where("fecha", "==", fecha),
         where("hora", "==", hora),
         where("estado", "in", ["pendiente", "confirmado"])
       );
+
       const snapshot = await getDocs(q);
+
       if (!snapshot.empty) {
-        alert("Ese horario ya está ocupado. Por favor elige otro.");
-        setStep(1); // Volver a selección de hora
-        fetchSlots(); // Actualizar slots
+        alert("Ese horario ya esta ocupado. Por favor elige otro.");
+        setStep(1);
+        fetchSlots();
         return;
       }
 
-      // 1. Guardar Turno
       await addDoc(collection(db, "turnos"), {
-        barberiaId: barberia?.id,
+        barberiaId: barberia.id,
         servicioId: servicio.id,
         servicioNombre: servicio.nombre,
         precio: Number(servicio.precio),
@@ -141,16 +156,15 @@ function ReservaContent({ slug }: { slug: string }) {
         createdAt: serverTimestamp()
       });
 
-      // 2. Registrar/Actualizar Cliente
       await addDoc(collection(db, "clientes"), {
-        barberiaId: barberia?.id,
+        barberiaId: barberia.id,
         nombre: cliente.nombre,
         whatsapp: cliente.whatsapp,
         lastVisit: serverTimestamp(),
         createdAt: serverTimestamp()
       });
 
-      setStep(4); // Success step
+      setStep(4);
     } catch (error) {
       console.error("Error saving turno:", error);
     } finally {
@@ -162,7 +176,9 @@ function ReservaContent({ slug }: { slug: string }) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-black gap-4">
         <Loader2 className="animate-spin w-12 h-12 text-primary" />
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/50 text-center px-6">Cargando Agenda de {slug}</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/50 text-center px-6">
+          Cargando reserva...
+        </p>
       </div>
     );
   }
@@ -171,26 +187,48 @@ function ReservaContent({ slug }: { slug: string }) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center p-6 space-y-6">
         <Scissors className="text-red-500 w-16 h-16" />
-        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Barbería no encontrada</h1>
+        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Barberia no encontrada</h1>
         <p className="text-gray-500 max-w-xs mx-auto">
-          {slugError ? "Por favor proporciona un slug válido en la URL." : "El slug especificado no coincide con ninguna barbería registrada."}
+          {slugError ? "Por favor proporciona un slug valido en la URL." : "El slug especificado no coincide con ninguna barberia registrada."}
         </p>
-        <button onClick={() => router.back()} className="bg-primary text-black px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest">Volver</button>
+        <button
+          onClick={() => router.back()}
+          className="bg-primary text-black px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest"
+        >
+          Volver
+        </button>
       </div>
     );
   }
 
   if (!barberia || !barberia.id) {
-    return <div>Error: barbería no cargada</div>;
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center p-6 space-y-6">
+        <Scissors className="text-red-500 w-16 h-16" />
+        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Error en la reserva</h1>
+        <p className="text-gray-500 max-w-xs mx-auto">No pudimos encontrar la informacion necesaria para realizar tu reserva.</p>
+        <button
+          onClick={() => router.back()}
+          className="bg-primary text-black px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest"
+        >
+          Volver
+        </button>
+      </div>
+    );
   }
 
   if (!servicio) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center p-6 space-y-6">
         <Scissors className="text-red-500 w-16 h-16" />
-        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Error en la reserva</h1>
-        <p className="text-gray-500 max-w-xs mx-auto">No pudimos encontrar la información necesaria para realizar tu reserva.</p>
-        <button onClick={() => router.back()} className="bg-primary text-black px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest">Volver</button>
+        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Servicio no disponible</h1>
+        <p className="text-gray-500 max-w-xs mx-auto">No encontramos el servicio seleccionado para esta reserva.</p>
+        <button
+          onClick={() => router.back()}
+          className="bg-primary text-black px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest"
+        >
+          Volver
+        </button>
       </div>
     );
   }
@@ -198,23 +236,25 @@ function ReservaContent({ slug }: { slug: string }) {
   return (
     <div className="min-h-screen bg-black text-white font-sans px-6 py-12">
       <div className="max-w-2xl mx-auto space-y-12">
-        {/* Header */}
         <div className="text-center space-y-4">
           <div className="bg-primary/10 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto border border-primary/20 mb-2">
             <Scissors className="text-primary w-8 h-8" />
           </div>
-          <h1 className="text-4xl font-black uppercase tracking-tight">{barberia?.nombre ?? "Barbería"}</h1>
-          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Reservando: <span className="text-primary">{servicio.nombre}</span></p>
+          <h1 className="text-4xl font-black uppercase tracking-tight">{barberia?.nombre ?? "Barberia"}</h1>
+          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
+            Reservando: <span className="text-primary">{servicio.nombre}</span>
+          </p>
         </div>
 
-        {/* Progress */}
         {step < 4 && (
           <div className="flex items-center justify-between px-10">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${
-                  step >= i ? "bg-primary text-black" : "bg-white/5 text-gray-600"
-                }`}>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${
+                    step >= i ? "bg-primary text-black" : "bg-white/5 text-gray-600"
+                  }`}
+                >
                   {i}
                 </div>
                 {i < 3 && <div className={`w-12 h-0.5 ${step > i ? "bg-primary" : "bg-white/5"}`} />}
@@ -227,13 +267,15 @@ function ReservaContent({ slug }: { slug: string }) {
           {step === 1 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-2">
-                <h2 className="text-3xl font-black uppercase tracking-tight">Fecha y <span className="text-primary">Hora</span></h2>
+                <h2 className="text-3xl font-black uppercase tracking-tight">
+                  Fecha y <span className="text-primary">Hora</span>
+                </h2>
               </div>
 
               <div className="space-y-6">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
-                    <Calendar className="w-3 h-3" /> Día del Turno
+                    <Calendar className="w-3 h-3" /> Dia del Turno
                   </label>
                   <input
                     type="date"
@@ -271,7 +313,9 @@ function ReservaContent({ slug }: { slug: string }) {
                   ) : (
                     <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl flex flex-col items-center gap-3 text-center">
                       <AlertCircle className="w-6 h-6 text-red-500" />
-                      <p className="text-[10px] font-black uppercase tracking-widest text-red-500">No hay horarios disponibles para esta fecha</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-red-500">
+                        No hay horarios disponibles para esta fecha
+                      </p>
                       <button
                         onClick={() => {
                           const d = new Date(fecha);
@@ -280,7 +324,7 @@ function ReservaContent({ slug }: { slug: string }) {
                         }}
                         className="bg-red-500/20 text-red-500 px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-red-500/30 transition-all"
                       >
-                        Próximo día disponible
+                        Proximo dia disponible
                       </button>
                     </div>
                   )}
@@ -302,7 +346,9 @@ function ReservaContent({ slug }: { slug: string }) {
           {step === 2 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-2">
-                <h2 className="text-3xl font-black uppercase tracking-tight">Tus <span className="text-primary">Datos</span></h2>
+                <h2 className="text-3xl font-black uppercase tracking-tight">
+                  Tus <span className="text-primary">Datos</span>
+                </h2>
               </div>
 
               <div className="space-y-6">
@@ -355,7 +401,9 @@ function ReservaContent({ slug }: { slug: string }) {
           {step === 3 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-2">
-                <h2 className="text-3xl font-black uppercase tracking-tight">Confirmar <span className="text-primary">Reserva</span></h2>
+                <h2 className="text-3xl font-black uppercase tracking-tight">
+                  Confirmar <span className="text-primary">Reserva</span>
+                </h2>
               </div>
 
               <div className="space-y-6">
@@ -366,7 +414,14 @@ function ReservaContent({ slug }: { slug: string }) {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
-                    <span className="text-white font-black text-sm">{new Date(fecha).toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
+                    <span className="text-white font-black text-sm">
+                      {new Date(fecha).toLocaleDateString("es-ES", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Hora</span>
@@ -413,7 +468,9 @@ function ReservaContent({ slug }: { slug: string }) {
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 text-center">
               <div className="space-y-4">
                 <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
-                <h2 className="text-3xl font-black uppercase tracking-tight">¡Reserva <span className="text-primary">Confirmada</span>!</h2>
+                <h2 className="text-3xl font-black uppercase tracking-tight">
+                  Reserva <span className="text-primary">Confirmada</span>
+                </h2>
                 <p className="text-gray-400">Te enviaremos un recordatorio por WhatsApp antes de tu turno.</p>
               </div>
 
@@ -424,7 +481,14 @@ function ReservaContent({ slug }: { slug: string }) {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Fecha</span>
-                  <span className="text-white font-black text-sm">{new Date(fecha).toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
+                  <span className="text-white font-black text-sm">
+                    {new Date(fecha).toLocaleDateString("es-ES", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 font-bold uppercase text-xs tracking-wider">Hora</span>
@@ -451,12 +515,14 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
   const slug = resolvedParams.slug;
 
   return (
-    <Suspense fallback={
-      <div className="flex flex-col items-center justify-center min-h-screen bg-black gap-4">
-        <Loader2 className="animate-spin w-12 h-12 text-primary" />
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/50 text-center px-6">Cargando...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex flex-col items-center justify-center min-h-screen bg-black gap-4">
+          <Loader2 className="animate-spin w-12 h-12 text-primary" />
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/50 text-center px-6">Cargando...</p>
+        </div>
+      }
+    >
       <ReservaContent slug={slug} />
     </Suspense>
   );
