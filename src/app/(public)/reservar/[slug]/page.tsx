@@ -66,6 +66,7 @@ function ReservaContent({ slug }: { slug: string }) {
   const [saving, setSaving] = useState(false);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [closeBlocked, setCloseBlocked] = useState(false);
 
   const serviciosSafe = servicios ?? [];
 
@@ -212,6 +213,16 @@ function ReservaContent({ slug }: { slug: string }) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleClose = () => {
+    window.close();
+
+    window.setTimeout(() => {
+      if (!window.closed) {
+        setCloseBlocked(true);
+      }
+    }, 150);
   };
 
   if (loading) {
@@ -534,9 +545,9 @@ function ReservaContent({ slug }: { slug: string }) {
               <div className="space-y-4">
                 <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
                 <h2 className="text-3xl font-black uppercase tracking-tight">
-                  Reserva <span className="text-primary">Confirmada</span>
+                  Turno <span className="text-primary">confirmado</span>
                 </h2>
-                <p className="text-gray-400">Te enviaremos un recordatorio por WhatsApp antes de tu turno.</p>
+                <p className="text-gray-400">Ya podes cerrar esta pestana.</p>
               </div>
 
               <div className="bg-white/5 p-6 rounded-2xl space-y-4">
@@ -556,12 +567,16 @@ function ReservaContent({ slug }: { slug: string }) {
                 </div>
               </div>
 
+              {closeBlocked && (
+                <p className="text-xs text-gray-500">Si esta pestana no se cierra automaticamente, puedes cerrarla manualmente.</p>
+              )}
+
               <button
                 type="button"
-                onClick={() => router.push("/")}
+                onClick={handleClose}
                 className="bg-primary text-black px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-primary/90 transition-all"
               >
-                Volver al Inicio
+                Cerrar
               </button>
             </div>
           )}
