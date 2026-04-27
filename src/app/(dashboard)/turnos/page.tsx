@@ -31,12 +31,20 @@ import {
 
 type ViewMode = "lista" | "semana" | "dia";
 
+interface ServicioOption {
+  id: string;
+  nombre: string;
+  precio?: number;
+  duracion?: number;
+}
+
 export default function TurnosAdmin() {
   const { barberia, loading: barberiaLoading } = useBarberia();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isNuevo = searchParams.get("nuevo") === "true";
   const [turnos, setTurnos] = useState<any[]>([]);
+  const [servicios, setServicios] = useState<ServicioOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("lista");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -44,9 +52,11 @@ export default function TurnosAdmin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [clienteNombre, setClienteNombre] = useState("");
   const [clienteWhatsapp, setClienteWhatsapp] = useState("");
+  const [servicioId, setServicioId] = useState("");
   const [servicioNombre, setServicioNombre] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [hora, setHora] = useState("");
+  const [duracion, setDuracion] = useState("");
   const [precio, setPrecio] = useState("");
   const [turnoError, setTurnoError] = useState("");
   const [savingTurno, setSavingTurno] = useState(false);
@@ -54,6 +64,7 @@ export default function TurnosAdmin() {
   useEffect(() => {
     if (barberia) {
       fetchTurnos();
+      fetchServicios();
     }
   }, [barberia]);
 
@@ -70,9 +81,37 @@ export default function TurnosAdmin() {
     }
   };
 
+  const fetchServicios = async () => {
+    if (!barberia) return;
+
+    try {
+      const serviciosData = await getTenantCollection<ServicioOption>(COLLECTIONS.SERVICIOS, barberia.id);
+      setServicios(serviciosData);
+    } catch (error) {
+      console.error("Error cargando servicios:", error);
+    }
+  };
+
+  const handleServicioChange = (selectedServicioId: string) => {
+    setServicioId(selectedServicioId);
+
+    const servicio = servicios.find((item) => item.id === selectedServicioId);
+
+    if (!servicio) {
+      setServicioNombre("");
+      setDuracion("");
+      setPrecio("");
+      return;
+    }
+
+    setServicioNombre(servicio.nombre);
+    setDuracion(servicio.duracion != null ? String(servicio.duracion) : "");
+    setPrecio(servicio.precio != null ? String(servicio.precio) : "");
+  };
+
   const handleCreateTurno = async () => {
     if (!barberia) return;
-    if (!clienteNombre.trim() || !servicioNombre.trim() || !fecha || !hora.trim()) {
+    if (!clienteNombre.trim() || !servicioId || !servicioNombre.trim() || !fecha || !hora.trim()) {
       setTurnoError("Completa cliente, servicio, fecha y hora para crear el turno.");
       return;
     }
@@ -85,7 +124,9 @@ export default function TurnosAdmin() {
         barberiaId: barberia?.id,
         clienteNombre: clienteNombre.trim(),
         clienteWhatsapp: clienteWhatsapp.trim(),
+        servicioId,
         servicioNombre: servicioNombre.trim(),
+        duracion: Number(duracion) || 0,
         fecha,
         hora: hora.trim(),
         precio: Number(precio) || 0,
@@ -94,9 +135,11 @@ export default function TurnosAdmin() {
 
       setClienteNombre("");
       setClienteWhatsapp("");
+      setServicioId("");
       setServicioNombre("");
       setFecha(new Date().toISOString().slice(0, 10));
       setHora("");
+      setDuracion("");
       setPrecio("");
       setSavingTurno(false);
       router.push("/turnos");
