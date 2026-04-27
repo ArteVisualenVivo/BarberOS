@@ -3,29 +3,25 @@
 import { useBarberia } from "@/hooks/useBarberia";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { 
-  getTenantCollection, 
+import {
+  getTenantCollection,
   addTenantDoc,
-  updateTenantDoc, 
-  deleteTenantDoc, 
-  COLLECTIONS 
+  updateTenantDoc,
+  deleteTenantDoc,
+  COLLECTIONS
 } from "@/lib/db";
-import { 
-  Calendar as CalendarIcon, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Trash2, 
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  CheckCircle2,
+  Trash2,
   Loader2,
   Phone,
   ChevronLeft,
   ChevronRight,
   List as ListIcon,
   LayoutGrid,
-  MoreVertical,
   Search,
-  Plus,
-  Filter,
   MessageSquare
 } from "lucide-react";
 
@@ -72,7 +68,7 @@ export default function TurnosAdmin() {
     if (!barberia) return;
 
     try {
-      const t = await getTenantCollection(COLLECTIONS.TURNOS, barberia?.id);
+      const t = await getTenantCollection(COLLECTIONS.TURNOS, barberia.id);
       setTurnos(t);
     } catch (error) {
       console.error(error);
@@ -121,7 +117,7 @@ export default function TurnosAdmin() {
 
     try {
       await addTenantDoc(COLLECTIONS.TURNOS, {
-        barberiaId: barberia?.id,
+        barberiaId: barberia.id,
         clienteNombre: clienteNombre.trim(),
         clienteWhatsapp: clienteWhatsapp.trim(),
         servicioId,
@@ -161,7 +157,7 @@ export default function TurnosAdmin() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Eliminar este turno permanentemente?")) return;
+    if (!confirm("Eliminar este turno permanentemente?")) return;
     try {
       await deleteTenantDoc(COLLECTIONS.TURNOS, id);
       fetchTurnos();
@@ -185,7 +181,7 @@ export default function TurnosAdmin() {
   };
 
   const formatFecha = (date: Date) => date.toLocaleDateString("en-CA");
-  
+
   const getWeekDays = (date: Date) => {
     const start = new Date(date);
     start.setDate(date.getDate() - date.getDay());
@@ -196,7 +192,7 @@ export default function TurnosAdmin() {
     });
   };
 
-  const turnosFiltrados = turnos.filter(t => {
+  const turnosFiltrados = turnos.filter((t) => {
     if (filtro !== "todos" && t.estado !== filtro) return false;
     if (searchTerm && !t.clienteNombre.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (viewMode === "dia") return t.fecha === formatFecha(selectedDate);
@@ -220,7 +216,6 @@ export default function TurnosAdmin() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">Turnos</h1>
@@ -228,20 +223,19 @@ export default function TurnosAdmin() {
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="flex flex-col lg:row lg:items-center justify-between gap-4 bg-white/[0.02] border border-white/[0.05] p-2 rounded-2xl">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 group-focus-within:text-white transition-colors" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Buscar por nombre de cliente..."
               className="w-full sm:w-64 bg-white/[0.03] border border-white/[0.05] rounded-xl py-2 pl-9 pr-3 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/10 transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
+
           <div className="h-6 w-px bg-white/10 hidden sm:block" />
 
           <div className="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/[0.05]">
@@ -274,7 +268,7 @@ export default function TurnosAdmin() {
 
           {(viewMode === "dia" || viewMode === "semana") && (
             <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/[0.05]">
-              <button 
+              <button
                 onClick={() => {
                   const d = new Date(selectedDate);
                   d.setDate(d.getDate() - (viewMode === "semana" ? 7 : 1));
@@ -285,12 +279,11 @@ export default function TurnosAdmin() {
                 <ChevronLeft size={16} />
               </button>
               <span className="text-[10px] font-bold text-zinc-300 px-2 min-w-[90px] text-center uppercase tracking-widest">
-                {viewMode === "dia" 
-                  ? selectedDate.toLocaleDateString("es-ES", { day: 'numeric', month: 'short' })
-                  : `Semana ${getWeekDays(selectedDate)[0].getDate()}`
-                }
+                {viewMode === "dia"
+                  ? selectedDate.toLocaleDateString("es-ES", { day: "numeric", month: "short" })
+                  : `Semana ${getWeekDays(selectedDate)[0].getDate()}`}
               </span>
-              <button 
+              <button
                 onClick={() => {
                   const d = new Date(selectedDate);
                   d.setDate(d.getDate() + (viewMode === "semana" ? 7 : 1));
@@ -310,7 +303,7 @@ export default function TurnosAdmin() {
           <div className="flex flex-col gap-6 mb-4">
             <div>
               <h2 className="text-2xl font-bold text-white">Crear nuevo turno</h2>
-              <p className="text-sm text-zinc-500 mt-1">Completa los datos para registrar el turno en tu barbería.</p>
+              <p className="text-sm text-zinc-500 mt-1">Completa los datos para registrar el turno en tu barberia.</p>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
@@ -336,13 +329,18 @@ export default function TurnosAdmin() {
               </div>
               <div className="space-y-2">
                 <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Servicio</label>
-                <input
-                  type="text"
-                  value={servicioNombre}
-                  onChange={(e) => setServicioNombre(e.target.value)}
-                  placeholder="Corte clásico, barba, etc."
+                <select
+                  value={servicioId}
+                  onChange={(e) => handleServicioChange(e.target.value)}
                   className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
-                />
+                >
+                  <option value="">Selecciona un servicio</option>
+                  {servicios.map((servicio) => (
+                    <option key={servicio.id} value={servicio.id}>
+                      {servicio.nombre} - {servicio.duracion || 0} min - ${servicio.precio || 0}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -365,13 +363,23 @@ export default function TurnosAdmin() {
                 </div>
               </div>
               <div className="space-y-2 lg:col-span-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Duracion</label>
+                <input
+                  type="number"
+                  value={duracion}
+                  readOnly
+                  placeholder="0"
+                  className="w-full rounded-3xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white outline-none"
+                />
+              </div>
+              <div className="space-y-2 lg:col-span-2">
                 <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Precio</label>
                 <input
                   type="number"
                   value={precio}
-                  onChange={(e) => setPrecio(e.target.value)}
+                  readOnly
                   placeholder="0"
-                  className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                  className="w-full rounded-3xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white outline-none"
                 />
               </div>
             </div>
@@ -395,7 +403,6 @@ export default function TurnosAdmin() {
         </div>
       )}
 
-      {/* Main Content */}
       {loading ? (
         <div className="flex items-center justify-center py-32">
           <Loader2 className="w-10 h-10 text-zinc-700 animate-spin" />
@@ -439,7 +446,7 @@ export default function TurnosAdmin() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(t.estado)}`}>
-                          {t.estado || 'pendiente'}
+                          {t.estado || "pendiente"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm font-bold text-white">
@@ -471,7 +478,7 @@ export default function TurnosAdmin() {
                         </div>
                         <div>
                           <p className="text-sm font-bold text-zinc-400">No se encontraron turnos</p>
-                          <p className="text-xs text-zinc-600 mt-1">Prueba ajustando los filtros o el término de búsqueda.</p>
+                          <p className="text-xs text-zinc-600 mt-1">Prueba ajustando los filtros o el termino de busqueda.</p>
                         </div>
                       </div>
                     </td>
@@ -497,7 +504,7 @@ export default function TurnosAdmin() {
                     </div>
                   </div>
                   <div className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.1em] border ${getStatusStyles(t.estado)}`}>
-                    {t.estado || 'pendiente'}
+                    {t.estado || "pendiente"}
                   </div>
                 </div>
 
@@ -540,8 +547,8 @@ export default function TurnosAdmin() {
                 <CalendarIcon size={24} className="text-zinc-600" />
               </div>
               <h3 className="text-sm font-bold text-white">Sin actividad reciente</h3>
-              <p className="text-xs text-zinc-500 mt-1 max-w-[220px]">Los nuevos turnos aparecerán aquí una vez que sean reservados.</p>
-              <button 
+              <p className="text-xs text-zinc-500 mt-1 max-w-[220px]">Los nuevos turnos apareceran aqui una vez que sean reservados.</p>
+              <button
                 onClick={() => router.push("/turnos?nuevo=true")}
                 className="mt-6 text-xs font-bold px-6 py-2.5 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all shadow-soft"
               >
