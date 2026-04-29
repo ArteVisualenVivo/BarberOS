@@ -27,6 +27,8 @@ interface Servicio {
   barberiaId: string;
 }
 
+type PublicoFiltro = "todos" | "hombre" | "mujer";
+
 const getTodayIsoDate = () => {
   const now = new Date();
   const year = now.getFullYear();
@@ -65,6 +67,7 @@ function ReservaContent({ slug }: { slug: string }) {
   const [fecha, setFecha] = useState(getTodayIsoDate());
   const [hora, setHora] = useState("");
   const [cliente, setCliente] = useState({ nombre: "", whatsapp: "" });
+  const [publicoFiltro, setPublicoFiltro] = useState<PublicoFiltro>("todos");
   const [saving, setSaving] = useState(false);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -74,6 +77,47 @@ function ReservaContent({ slug }: { slug: string }) {
   const serviciosSeleccionadosSafe = serviciosSeleccionados ?? [];
   const totalPrecio = serviciosSeleccionadosSafe.reduce((total, servicio) => total + (Number(servicio.precio) || 0), 0);
   const totalDuracion = serviciosSeleccionadosSafe.reduce((total, servicio) => total + (Number(servicio.duracion) || 0), 0);
+
+  const servicioEsParaMujer = (nombre: string) => {
+    const normalized = nombre.toLowerCase();
+    return [
+      "uñas",
+      "unas",
+      "alisado",
+      "botox",
+      "mechas",
+      "color",
+      "tintura",
+      "peinado",
+      "perfilado de cejas",
+      "cejas",
+      "pestañas",
+      "pestanas",
+      "manicura",
+      "pedicura",
+      "facial",
+    ].some((keyword) => normalized.includes(keyword));
+  };
+
+  const servicioEsParaHombre = (nombre: string) => {
+    const normalized = nombre.toLowerCase();
+    return [
+      "barba",
+      "afeitado",
+      "corte",
+      "degradado",
+      "fade",
+      "perfilado de barba",
+      "bigote",
+    ].some((keyword) => normalized.includes(keyword));
+  };
+
+  const serviciosFiltrados = serviciosSafe.filter((servicio) => {
+    if (publicoFiltro === "todos") return true;
+    if (publicoFiltro === "mujer") return servicioEsParaMujer(servicio.nombre);
+    if (publicoFiltro === "hombre") return servicioEsParaHombre(servicio.nombre);
+    return true;
+  });
 
   useEffect(() => {
     fetchInitialData();
@@ -341,9 +385,34 @@ function ReservaContent({ slug }: { slug: string }) {
                 </p>
               </div>
 
-              {serviciosSafe.length > 0 ? (
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                  Mostrar servicios para
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {(["todos", "hombre", "mujer"] as PublicoFiltro[]).map((option) => {
+                    const isActive = publicoFiltro === option;
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setPublicoFiltro(option)}
+                        className={`rounded-2xl border px-4 py-3 text-xs font-black uppercase tracking-widest transition-all ${
+                          isActive
+                            ? "border-primary bg-primary text-black"
+                            : "border-white/10 bg-black text-gray-400 hover:border-primary/40"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {serviciosFiltrados.length > 0 ? (
                 <div className="grid gap-4">
-                  {serviciosSafe.map((servicio) => {
+                  {serviciosFiltrados.map((servicio) => {
                     const isSelected = serviciosSeleccionadosSafe.some((item) => item.id === servicio.id);
 
                     return (
@@ -389,8 +458,16 @@ function ReservaContent({ slug }: { slug: string }) {
                 </div>
               ) : (
                 <div className="bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
-                  <p className="text-sm font-bold text-white">Esta barberia todavia no tiene servicios publicados.</p>
-                  <p className="mt-2 text-xs text-gray-500">Prueba mas tarde o contacta al negocio directamente.</p>
+                  <p className="text-sm font-bold text-white">
+                    {serviciosSafe.length === 0
+                      ? "Esta barberia todavia no tiene servicios publicados."
+                      : "No hay servicios visibles para este filtro."}
+                  </p>
+                  <p className="mt-2 text-xs text-gray-500">
+                    {serviciosSafe.length === 0
+                      ? "Prueba mas tarde o contacta al negocio directamente."
+                      : "Prueba cambiando entre Todos, Hombre o Mujer."}
+                  </p>
                 </div>
               )}
 
