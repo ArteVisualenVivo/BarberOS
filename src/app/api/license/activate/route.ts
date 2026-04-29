@@ -72,26 +72,36 @@ export async function POST(req: Request) {
 
     const license = licenseSnap.data();
     const startRaw = license?.licenseStartAt;
+    const activatedRaw = license?.activatedAt;
+    const createdRaw = license?.createdAt;
     const endRaw = license?.expiresAt;
 
-    const startDate =
-      startRaw instanceof Timestamp
-        ? startRaw.toDate()
-        : startRaw
-          ? new Date(startRaw)
+    const parseDate = (value: unknown) =>
+      value instanceof Timestamp
+        ? value.toDate()
+        : value
+          ? new Date(value as string | number | Date)
           : null;
+
+    const parsedStart = parseDate(startRaw);
+    const parsedActivated = parseDate(activatedRaw);
+    const parsedCreated = parseDate(createdRaw);
+    const parsedEnd = parseDate(endRaw);
+
+    const startDate =
+      parsedStart && !Number.isNaN(parsedStart.getTime())
+        ? parsedStart
+        : parsedActivated && !Number.isNaN(parsedActivated.getTime())
+          ? parsedActivated
+          : parsedCreated && !Number.isNaN(parsedCreated.getTime())
+            ? parsedCreated
+            : new Date();
 
     const endDate =
-      endRaw instanceof Timestamp
-        ? endRaw.toDate()
-        : endRaw
-          ? new Date(endRaw)
-          : null;
+      parsedEnd && !Number.isNaN(parsedEnd.getTime()) ? parsedEnd : null;
 
     if (
-      !startDate ||
       !endDate ||
-      Number.isNaN(startDate.getTime()) ||
       Number.isNaN(endDate.getTime())
     ) {
       return new Response(
