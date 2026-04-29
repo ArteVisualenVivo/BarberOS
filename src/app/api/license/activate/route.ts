@@ -70,28 +70,30 @@ export async function POST(req: Request) {
       );
     }
 
-    const license = licenseSnap.data() || {};
+    const license = licenseSnap.data();
     const startRaw = license?.licenseStartAt;
     const endRaw = license?.expiresAt;
 
-    if (!startRaw || !endRaw) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          ok: false,
-          error: "invalid_license_dates",
-        }),
-        { status: 200 }
-      );
-    }
-
     const startDate =
-      startRaw instanceof Timestamp ? startRaw.toDate() : new Date(startRaw);
+      startRaw instanceof Timestamp
+        ? startRaw.toDate()
+        : startRaw
+          ? new Date(startRaw)
+          : null;
 
     const endDate =
-      endRaw instanceof Timestamp ? endRaw.toDate() : new Date(endRaw);
+      endRaw instanceof Timestamp
+        ? endRaw.toDate()
+        : endRaw
+          ? new Date(endRaw)
+          : null;
 
-    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    if (
+      !startDate ||
+      !endDate ||
+      Number.isNaN(startDate.getTime()) ||
+      Number.isNaN(endDate.getTime())
+    ) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -110,15 +112,19 @@ export async function POST(req: Request) {
       licenseStartAt: startDate,
     });
 
-    await setDoc(doc(dbBarberos, "barberias", barberiaId), {
-      licenseCode: code,
-      subscriptionStatus: "active",
-      status: "active",
-      plan: "pro",
-      licenseStartAt: startDate,
-      licenseExpiresAt: endDate,
-      updatedAt: new Date(),
-    }, { merge: true });
+    await setDoc(
+      doc(dbBarberos, "barberias", barberiaId),
+      {
+        licenseStartAt: startDate,
+        licenseExpiresAt: endDate,
+        licenseCode: license?.code,
+        plan: "pro",
+        status: "active",
+        subscriptionStatus: "active",
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    );
 
     console.log("ACTIVATE SUCCESS:", {
       barberiaId,
