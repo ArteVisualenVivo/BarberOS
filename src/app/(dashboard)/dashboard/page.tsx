@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useBarberia } from "@/hooks/useBarberia";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,7 +33,7 @@ const getTodayIsoDate = () => {
 };
 
 export default function DashboardPage() {
-  console.log("🔥 DASHBOARD PAGE RENDER REAL");
+  console.log("ðŸ”¥ DASHBOARD PAGE RENDER REAL");
   const { barberia, loading } = useBarberia();
   const { user, userData } = useAuth();
   const router = useRouter();
@@ -157,9 +157,9 @@ export default function DashboardPage() {
   const shareDataBlock = (
     <>
       <div>
-        <h2 className="text-xl font-bold text-white">RecibÃ­ reservas automÃ¡ticas 24/7</h2>
-        <p className="text-sm text-zinc-400 mt-2">CompartÃ­ tu link y llenÃ¡ tu agenda sin llamadas ni mensajes</p>
-        <p className="text-xs text-emerald-400/80 mt-2">âœ“ Ya estÃ¡s listo para recibir reservas online</p>
+        <h2 className="text-xl font-bold text-white">Recibí reservas automáticas 24/7</h2>
+        <p className="text-sm text-zinc-400 mt-2">Compartí tu link y llená tu agenda sin llamadas ni mensajes</p>
+        <p className="text-xs text-emerald-400/80 mt-2">✓ Ya estás listo para recibir reservas online</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
@@ -241,64 +241,13 @@ export default function DashboardPage() {
             {barberia?.subscriptionStatus === "active" ? (
               <>
                 <div>
-                <h2 className="text-xl font-bold text-emerald-400">Plan PRO Activado ✔</h2>
-                <p className="text-sm text-zinc-400 mt-2">Tenés acceso a todas las funciones premium</p>
+                  <h2 className="text-xl font-bold text-emerald-400">Plan PRO Activado ✓</h2>
+                  <p className="text-sm text-zinc-400 mt-2">Tenés acceso a todas las funciones premium</p>
                 </div>
                 {shareDataBlock}
               </>
             ) : (
-              <>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Recibí reservas automáticas 24/7</h2>
-                  <p className="text-sm text-zinc-400 mt-2">Compartí tu link y llená tu agenda sin llamadas ni mensajes</p>
-                  <p className="text-xs text-emerald-400/80 mt-2">✓ Ya estás listo para recibir reservas online</p>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
-                  <div className="space-y-2">
-                    <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Link de reservas</label>
-                    <input
-                      readOnly
-                      value={bookingUrl}
-                      className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyLink}
-                    className="rounded-3xl bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] hover:bg-zinc-200 transition"
-                  >
-                    COPIAR LINK DE RESERVA
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Mensaje listo para redes</label>
-                  <textarea
-                    readOnly
-                    value={mensaje}
-                    rows={4}
-                    className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none resize-none"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <button
-                    type="button"
-                    onClick={handleCopyMessage}
-                    className="w-full sm:w-auto rounded-3xl bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] hover:bg-zinc-200 transition"
-                  >
-                    Copiar mensaje
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleShareWhatsApp}
-                    className="w-full sm:w-auto rounded-3xl bg-emerald-500 px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] text-black hover:bg-emerald-400 transition"
-                  >
-                    Compartir por WhatsApp
-                  </button>
-                </div>
-              </>
+              <>{shareDataBlock}</>
             )}
           </div>
         </div>
@@ -388,7 +337,7 @@ export default function DashboardPage() {
                   <Calendar size={24} className="text-zinc-600" />
                 </div>
                 <h3 className="text-sm font-bold text-white">Sin actividad reciente</h3>
-                <p className="text-xs text-zinc-500 mt-1 max-w-[220px]">Los nuevos turnos aparecerán aquí una vez que sean reservados.</p>
+                <p className="text-xs text-zinc-500 mt-1 max-w-[220px]">Los nuevos turnos aparecerÃ¡n aquÃ­ una vez que sean reservados.</p>
                 <Link href="/turnos?nuevo=true" className="mt-6 text-xs font-bold px-6 py-2.5 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all shadow-soft">
                   Crear Primer Turno
                 </Link>
@@ -402,7 +351,7 @@ export default function DashboardPage() {
           <div className="glass p-6 rounded-2xl space-y-6 shadow-soft">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-white tracking-tight">Tendencia de Reservas</h2>
-              <span className="text-[10px] font-bold text-zinc-500 bg-white/[0.03] px-2.5 py-1 rounded-full border border-white/[0.05]">Últimos 7 días</span>
+              <span className="text-[10px] font-bold text-zinc-500 bg-white/[0.03] px-2.5 py-1 rounded-full border border-white/[0.05]">Ãšltimos 7 dÃ­as</span>
             </div>
             <div className="h-44 w-full flex items-end gap-3 px-1 pt-4">
               {[35, 65, 45, 85, 55, 75, 95].map((h, i) => (
@@ -420,10 +369,10 @@ export default function DashboardPage() {
             <div className="flex justify-between text-[10px] text-zinc-600 font-bold uppercase tracking-[0.2em] px-1">
               <span>Lun</span>
               <span>Mar</span>
-              <span>Mié</span>
+              <span>MiÃ©</span>
               <span>Jue</span>
               <span>Vie</span>
-              <span>Sáb</span>
+              <span>SÃ¡b</span>
               <span>Dom</span>
             </div>
           </div>
@@ -479,7 +428,7 @@ export default function DashboardPage() {
                     <h3 className="text-sm font-bold text-white tracking-tight">Mejorar a Pro</h3>
                   </div>
                   <p className="text-xs text-zinc-500 leading-relaxed mb-6 font-medium">
-                    Desbloquea analíticas avanzadas, turnos ilimitados y marca personalizada para tu negocio.
+                    Desbloquea analÃ­ticas avanzadas, turnos ilimitados y marca personalizada para tu negocio.
                   </p>
                   <Link href="/activate" className="block w-full text-center py-3 bg-white/[0.03] text-white border border-white/[0.08] rounded-xl text-xs font-bold hover:bg-white hover:text-black transition-all shadow-soft group-hover:border-white/20">
                     Mejorar Ahora
