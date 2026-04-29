@@ -154,6 +154,61 @@ export default function DashboardPage() {
     window.open(whatsappUrl, "_blank");
   };
 
+  const shareDataBlock = (
+    <>
+      <div>
+        <h2 className="text-xl font-bold text-white">RecibÃ­ reservas automÃ¡ticas 24/7</h2>
+        <p className="text-sm text-zinc-400 mt-2">CompartÃ­ tu link y llenÃ¡ tu agenda sin llamadas ni mensajes</p>
+        <p className="text-xs text-emerald-400/80 mt-2">âœ“ Ya estÃ¡s listo para recibir reservas online</p>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
+        <div className="space-y-2">
+          <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Link de reservas</label>
+          <input
+            readOnly
+            value={bookingUrl}
+            className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleCopyLink}
+          className="rounded-3xl bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] hover:bg-zinc-200 transition"
+        >
+          COPIAR LINK DE RESERVA
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Mensaje listo para redes</label>
+        <textarea
+          readOnly
+          value={mensaje}
+          rows={4}
+          className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none resize-none"
+        />
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <button
+          type="button"
+          onClick={handleCopyMessage}
+          className="w-full sm:w-auto rounded-3xl bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] hover:bg-zinc-200 transition"
+        >
+          Copiar mensaje
+        </button>
+        <button
+          type="button"
+          onClick={handleShareWhatsApp}
+          className="w-full sm:w-auto rounded-3xl bg-emerald-500 px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] text-black hover:bg-emerald-400 transition"
+        >
+          Compartir por WhatsApp
+        </button>
+      </div>
+    </>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -184,10 +239,13 @@ export default function DashboardPage() {
         <div className="glass rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
           <div className="flex flex-col gap-4">
             {barberia?.subscriptionStatus === "active" ? (
-              <div>
+              <>
+                <div>
                 <h2 className="text-xl font-bold text-emerald-400">Plan PRO Activado ✔</h2>
                 <p className="text-sm text-zinc-400 mt-2">Tenés acceso a todas las funciones premium</p>
-              </div>
+                </div>
+                {shareDataBlock}
+              </>
             ) : (
               <>
                 <div>
