@@ -23,6 +23,7 @@ import {
 export default function ClientesAdmin() {
   const { barberia, loading: barberiaLoading } = useBarberia();
   const [clientes, setClientes] = useState<any[]>([]);
+  const [servicios, setServicios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
@@ -72,6 +73,7 @@ export default function ClientesAdmin() {
   useEffect(() => {
     if (barberia) {
       fetchClientes();
+      fetchServicios();
     }
   }, [barberia]);
 
@@ -92,6 +94,17 @@ export default function ClientesAdmin() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchServicios = async () => {
+    if (!barberia) return;
+
+    try {
+      const serviciosData = await getTenantCollection(COLLECTIONS.SERVICIOS, barberia.id);
+      setServicios(serviciosData);
+    } catch (error) {
+      console.error("Error cargando servicios:", error);
     }
   };
 
@@ -226,13 +239,18 @@ export default function ClientesAdmin() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-[0.3em] text-zinc-500">Servicio</label>
-                  <input
-                    type="text"
+                  <select
                     value={turnoServicio}
                     onChange={(e) => setTurnoServicio(e.target.value)}
-                    placeholder="Ej: Corte, Barba, etc."
                     className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
-                  />
+                  >
+                    <option value="">Seleccionar servicio</option>
+                    {servicios.map((servicio) => (
+                      <option key={servicio.id} value={servicio.nombre}>
+                        {servicio.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
