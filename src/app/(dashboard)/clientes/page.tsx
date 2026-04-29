@@ -243,10 +243,17 @@ export default function ClientesAdmin() {
                     value={turnoServicio}
                     onChange={(e) => setTurnoServicio(e.target.value)}
                     className="w-full rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                    style={{ colorScheme: "dark" }}
                   >
-                    <option value="">Seleccionar servicio</option>
+                    <option value="" className="bg-[#050505] text-white">
+                      Seleccionar servicio
+                    </option>
                     {servicios.map((servicio) => (
-                      <option key={servicio.id} value={servicio.nombre}>
+                      <option
+                        key={servicio.id}
+                        value={servicio.nombre}
+                        className="bg-[#050505] text-white"
+                      >
                         {servicio.nombre}
                       </option>
                     ))}
