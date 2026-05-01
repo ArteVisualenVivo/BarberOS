@@ -253,7 +253,7 @@ export default function SettingsPage() {
               activeTab === "docs" ? "bg-white/[0.08] text-white shadow-soft" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <BookOpen size={14} /> DocumentaciÃ³n
+            <BookOpen size={14} /> Documentación
           </button>
         </div>
       </div>
@@ -280,7 +280,7 @@ export default function SettingsPage() {
               }`}
               onClick={() => setActiveTab('docs')}
             >
-              DocumentaciÃ³n
+              Documentación
               <BookOpen size={14} className={activeTab === 'docs' ? 'text-white' : 'text-zinc-700'} />
             </button>
           </div>
@@ -556,7 +556,7 @@ export default function SettingsPage() {
               <div className="p-6 border-b border-white/[0.05] bg-white/[0.01]">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">Notificaciones</h3>
                 <p className="text-[11px] text-zinc-500 mt-1">
-                  Configura quÃ© alertas querÃ©s recibir. Por ahora se guarda localmente en este dispositivo (UI-ready).
+                  Configura qué alertas querés recibir. Por ahora se guarda localmente en este dispositivo (UI-ready).
                 </p>
               </div>
 
@@ -565,7 +565,7 @@ export default function SettingsPage() {
                   <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4">
                     <p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-500">Canales</p>
                     {[
-                      { id: "whatsapp" as const, label: "WhatsApp (principal)", desc: "Alertas rÃ¡pidas para tu dÃ­a a dÃ­a." },
+                      { id: "whatsapp" as const, label: "WhatsApp (principal)", desc: "Alertas rápidas para tu día a día." },
                       { id: "email" as const, label: "Email (secundario)", desc: "Resumen y soporte (cuando se active)." },
                     ].map((c) => (
                       <label key={c.id} className="flex items-start justify-between gap-4 py-3">
@@ -591,8 +591,8 @@ export default function SettingsPage() {
                   <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4">
                     <p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-500">Eventos</p>
                     {[
-                      { id: "nuevo_turno" as const, label: "Nuevo turno creado", desc: "Cuando entra una reserva pÃºblica o lo creas manual." },
-                      { id: "cancelacion" as const, label: "CancelaciÃ³n de turno", desc: "Cuando un turno cambia a cancelado." },
+                      { id: "nuevo_turno" as const, label: "Nuevo turno creado", desc: "Cuando entra una reserva pública o lo creas manual." },
+                      { id: "cancelacion" as const, label: "Cancelación de turno", desc: "Cuando un turno cambia a cancelado." },
                       { id: "recordatorio" as const, label: "Recordatorio de turno", desc: "Antes de cada turno (cuando se active)." },
                       { id: "nuevo_cliente" as const, label: "Nuevo cliente registrado", desc: "Cuando se registra un cliente desde reserva o dashboard." },
                     ].map((ev) => (
@@ -651,44 +651,44 @@ function DocsPanel({ isPro }: { isPro: boolean }) {
   const sections = [
     {
       id: "servicios",
-      title: "CÃ³mo crear servicios correctamente",
+      title: "Cómo crear servicios correctamente",
       body: (
         <div className="space-y-3 text-sm text-zinc-300 leading-7">
           <p>
-            Ve a <span className="font-semibold text-white">Servicios</span> y crea cada servicio con un nombre claro, duraciÃ³n (min) y precio. Esto alimenta la
-            reserva pÃºblica y el formulario de turnos manuales.
+            Ve a <span className="font-semibold text-white">Servicios</span> y crea cada servicio con un nombre claro, duración (min) y precio. Esto alimenta la
+            reserva pública y el formulario de turnos manuales.
           </p>
           <p className="text-zinc-500 text-xs">
-            Buenas prÃ¡cticas: nombres simples, duraciones realistas y precios consistentes para evitar confusiones.
+            Buenas prácticas: nombres simples, duraciones realistas y precios consistentes para evitar confusiones.
           </p>
         </div>
       ),
     },
     {
       id: "turnos",
-      title: "Turnos manuales y desde reserva pÃºblica",
+      title: "Turnos manuales y desde reserva pública",
       body: (
         <div className="space-y-3 text-sm text-zinc-300 leading-7">
           <p>
-            Puedes crear turnos manualmente desde <span className="font-semibold text-white">Turnos</span> y tambiÃ©n recibir reservas desde tu link pÃºblico.
+            Puedes crear turnos manualmente desde <span className="font-semibold text-white">Turnos</span> y también recibir reservas desde tu link público.
           </p>
           <p className="text-zinc-500 text-xs">
-            Revisa tu lista de turnos para confirmar, reprogramar o cancelar segÃºn corresponda.
+            Revisa tu lista de turnos para confirmar, reprogramar o cancelar según corresponda.
           </p>
         </div>
       ),
     },
     {
       id: "link",
-      title: "CÃ³mo funciona el link de reservas pÃºblico",
+      title: "Cómo funciona el link de reservas público",
       body: (
         <div className="space-y-3 text-sm text-zinc-300 leading-7">
           <p>
-            Tu link pÃºblico se arma con el <span className="font-semibold text-white">slug</span> del negocio. CompÃ¡rtelo por WhatsApp o redes para que el cliente
+            Tu link público se arma con el <span className="font-semibold text-white">slug</span> del negocio. Compártelo por WhatsApp o redes para que el cliente
             elija servicios, fecha y horario.
           </p>
           <p className="text-zinc-500 text-xs">
-            Tip: configura horarios y crea servicios para que la pÃ¡gina de reservas muestre opciones reales.
+            Tip: configura horarios y crea servicios para que la página de reservas muestre opciones reales.
           </p>
         </div>
       ),
@@ -699,7 +699,7 @@ function DocsPanel({ isPro }: { isPro: boolean }) {
       body: (
         <div className="space-y-3 text-sm text-zinc-300 leading-7">
           <p>
-            El trial permite usar el dashboard por tiempo limitado. Si vence, el acceso se bloquea y verÃ¡s la pantalla de activaciÃ³n.
+            El trial permite usar el dashboard por tiempo limitado. Si vence, el acceso se bloquea y verás la pantalla de activación.
           </p>
           <p className="text-zinc-500 text-xs">
             Estado actual: {isPro ? <span className="text-emerald-400 font-semibold">PRO activo</span> : <span className="text-zinc-400 font-semibold">No PRO</span>}
@@ -709,24 +709,24 @@ function DocsPanel({ isPro }: { isPro: boolean }) {
     },
     {
       id: "activar",
-      title: "CÃ³mo activar licencia",
+      title: "Cómo activar licencia",
       body: (
         <div className="space-y-3 text-sm text-zinc-300 leading-7">
           <p>
-            Si tu trial finaliza, entra a <span className="font-semibold text-white">/activate</span>, solicita el cÃ³digo al admin por WhatsApp y colÃ³calo en la
-            pantalla de activaciÃ³n.
+            Si tu trial finaliza, entra a <span className="font-semibold text-white">/activate</span>, solicita el código al admin por WhatsApp y colócalo en la
+            pantalla de activación.
           </p>
-          <p className="text-zinc-500 text-xs">Una vez activado, el sistema marcarÃ¡ el plan como PRO y recuperarÃ¡s acceso completo.</p>
+          <p className="text-zinc-500 text-xs">Una vez activado, el sistema marcará el plan como PRO y recuperarás acceso completo.</p>
         </div>
       ),
     },
     {
       id: "buenas",
-      title: "Buenas prÃ¡cticas para no perder clientes",
+      title: "Buenas prácticas para no perder clientes",
       body: (
         <div className="space-y-3 text-sm text-zinc-300 leading-7">
-          <p>Confirma turnos a tiempo, comparte tu link pÃºblico en cada conversaciÃ³n y mantÃ©n tu catÃ¡logo de servicios actualizado.</p>
-          <p className="text-zinc-500 text-xs">RecomendaciÃ³n: usa WhatsApp del cliente para recontacto y agenda el dÃ­a con duraciones realistas.</p>
+          <p>Confirma turnos a tiempo, comparte tu link público en cada conversación y mantén tu catálogo de servicios actualizado.</p>
+          <p className="text-zinc-500 text-xs">Recomendación: usa WhatsApp del cliente para recontacto y agenda el día con duraciones realistas.</p>
         </div>
       ),
     },
@@ -735,8 +735,8 @@ function DocsPanel({ isPro }: { isPro: boolean }) {
   return (
     <div className="glass rounded-2xl overflow-hidden shadow-soft">
       <div className="p-6 border-b border-white/[0.05] bg-white/[0.01]">
-        <h3 className="text-sm font-bold text-white uppercase tracking-wider">DocumentaciÃ³n</h3>
-        <p className="text-[11px] text-zinc-500 mt-1">GuÃ­as rÃ¡pidas alineadas a cÃ³mo funciona BarberOS hoy.</p>
+        <h3 className="text-sm font-bold text-white uppercase tracking-wider">Documentación</h3>
+        <p className="text-[11px] text-zinc-500 mt-1">Guías rápidas alineadas a cómo funciona BarberOS hoy.</p>
       </div>
 
       <div className="p-6 space-y-3">
