@@ -33,6 +33,7 @@ const getTodayIsoDate = () => {
 };
 
 export default function DashboardPage() {
+  console.log("🔥 DASHBOARD PAGE RENDER REAL");
   const { barberia, loading } = useBarberia();
   const { user, userData } = useAuth();
   const router = useRouter();
