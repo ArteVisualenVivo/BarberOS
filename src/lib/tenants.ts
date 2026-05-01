@@ -1,4 +1,4 @@
-import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export interface Barberia {
@@ -11,7 +11,7 @@ export interface Barberia {
 }
 
 /**
- * OBTENER BARBERÍAS POR OWNER
+ * OBTENER BARBERIAS POR OWNER
  */
 export const getBarberiasByOwner = async (ownerId: string) => {
   if (!ownerId) return [];
@@ -26,7 +26,7 @@ export const getBarberiasByOwner = async (ownerId: string) => {
 };
 
 /**
- * OBTENER BARBERÍA POR SLUG
+ * OBTENER BARBERIA POR SLUG
  */
 export const getBarberiaBySlug = async (slug: string) => {
   if (!slug) return null;
@@ -36,11 +36,11 @@ export const getBarberiaBySlug = async (slug: string) => {
 
   if (snap.empty) return null;
 
-  const doc = snap.docs[0];
+  const firstDoc = snap.docs[0];
 
   return {
-    id: doc.id,
-    ...doc.data(),
+    id: firstDoc.id,
+    ...firstDoc.data(),
   } as Barberia;
 };
 
@@ -51,23 +51,36 @@ export const hasDashboardAccess = (barberia: any) => {
   if (!barberia) return false;
 
   try {
-    // acceso directo por suscripción activa
+    const parseDate = (value: any) => {
+      if (!value) return null;
+      if (typeof value?.toDate === "function") return value.toDate();
+      if (typeof value?.seconds === "number") return new Date(value.seconds * 1000);
+
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    };
+
+    // Suscripcion activa solo si sigue vigente.
     if (
       barberia?.subscriptionStatus === "active" ||
       barberia?.subscriptionStatus === "pro" ||
       barberia?.plan === "pro"
     ) {
-      return true;
+      const expiresAt = parseDate(barberia?.licenseExpiresAt);
+
+      if (!expiresAt) return false;
+
+      return Date.now() <= expiresAt.getTime();
     }
 
-    // cálculo de trial
+    // Calculo de trial.
     const trialStart =
       barberia?.trialStartAt?.toDate?.()?.getTime?.() ??
       (barberia?.trialStartAt ? new Date(barberia?.trialStartAt).getTime() : null);
 
     const trialDays = Number(barberia?.trialDays) || 7;
 
-    if (trialStart && !isNaN(trialStart)) {
+    if (trialStart && !Number.isNaN(trialStart)) {
       const trialEnds = trialStart + trialDays * 24 * 60 * 60 * 1000;
       return Date.now() < trialEnds;
     }
