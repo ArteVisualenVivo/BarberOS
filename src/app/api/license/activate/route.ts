@@ -19,6 +19,14 @@ const barberosApp =
 
 const dbBarberos = getFirestore(barberosApp);
 
+const toDate = (value: any) => {
+  if (!value) return null;
+  if (typeof value.toDate === "function") return value.toDate();
+  if (typeof value.seconds === "number") return new Date(value.seconds * 1000);
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -36,9 +44,6 @@ export async function POST(req: Request) {
     }
 
     const normalizedCode = String(code).toUpperCase().trim();
-    const licenseStartAt = new Date();
-    const licenseExpiresAt = new Date(licenseStartAt);
-    licenseExpiresAt.setMonth(licenseExpiresAt.getMonth() + 1);
 
     let licenseSnap;
 
@@ -72,13 +77,28 @@ export async function POST(req: Request) {
       );
     }
 
+    const license = licenseSnap.data();
+    const licenseStartAt = toDate(license?.licenseStartAt);
+    const licenseExpiresAt = toDate(license?.expiresAt);
+
+    if (!licenseStartAt || !licenseExpiresAt) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          ok: false,
+          error: "invalid_license_dates",
+        }),
+        { status: 200 }
+      );
+    }
+
     await db.collection("licenses").doc(normalizedCode).update(
       {
         status: "active",
         active: true,
         used: true,
         activatedAt: new Date(),
-        licenseStartAt: new Date(),
+        licenseStartAt,
       },
     );
 
