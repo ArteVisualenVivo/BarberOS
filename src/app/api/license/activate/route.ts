@@ -78,8 +78,10 @@ export async function POST(req: Request) {
     }
 
     const license = licenseSnap.data();
-    const licenseStartAt = toDate(license?.licenseStartAt);
-    const licenseExpiresAt = toDate(license?.expiresAt);
+    const licenseStartAtRaw = license?.licenseStartAt;
+    const licenseExpiresAtRaw = license?.expiresAt;
+    const licenseStartAt = toDate(licenseStartAtRaw);
+    const licenseExpiresAt = toDate(licenseExpiresAtRaw);
 
     if (!licenseStartAt || !licenseExpiresAt) {
       return new Response(
@@ -92,15 +94,13 @@ export async function POST(req: Request) {
       );
     }
 
-    await db.collection("licenses").doc(normalizedCode).update(
-      {
-        status: "active",
-        active: true,
-        used: true,
-        activatedAt: new Date(),
-        licenseStartAt,
-      },
-    );
+    await db.collection("licenses").doc(normalizedCode).update({
+      status: "active",
+      active: true,
+      used: true,
+      activatedAt: new Date(),
+      licenseStartAt,
+    });
 
     await setDoc(doc(dbBarberos, "barberias", barberiaId), {
       licenseCode: code,
