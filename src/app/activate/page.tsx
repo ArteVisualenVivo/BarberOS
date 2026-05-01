@@ -48,39 +48,29 @@ export default function ActivatePage() {
       return;
     }
 
-    console.log("DEBUG: Enviando barberiaId:", barberia?.id);
+    console.log("[ACTIVATE PAGE] antes del fetch", { code, barberiaId: barberia?.id });
 
-    try {
-      const response = await fetch("/api/license/activate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, barberiaId: barberia?.id }),
-      });
+    const response = await fetch("/api/license/activate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, barberiaId: barberia?.id }),
+    });
 
-      const data = await response.json();
+    console.log("[ACTIVATE PAGE] response.status", response.status);
 
-      if (data.ok) {
-        setStatus("success");
-        setError("");
-        setTimeout(() => router.push("/dashboard"), 1500);
-      } else if (data.error === "license_already_used") {
-        setError("Licencia ya usada");
-        setStatus("error");
-      } else if (data.error === "license_not_found") {
-        setError("Código no encontrado");
-        setStatus("error");
-      } else if (data.error === "license_invalid") {
-        setError("Licencia inválida o expirada");
-        setStatus("error");
-      } else {
-        setError("Error al activar la licencia");
-        setStatus("error");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Error al conectar con el servidor. Intenta nuevamente.");
-      setStatus("error");
+    const data = await response.json();
+    console.log("[ACTIVATE PAGE] response.json()", data);
+
+    if (response.ok && data?.success) {
+      setStatus("success");
+      setError("");
+      router.refresh();
+      setTimeout(() => router.push("/dashboard"), 1500);
+      return;
     }
+
+    setError(data?.message || data?.error || "Error al activar la licencia");
+    setStatus("error");
   };
 
   if (authLoading || loading) {
