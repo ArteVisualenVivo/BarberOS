@@ -76,7 +76,18 @@ export async function POST(req: Request) {
       }
     }
 
-    // 🔥 ACTIVAR BARBERÍA EN BARBEROS
+    // 🔥 ACTIVAR LICENCIA EN FIRESTORE Y BARBERÍA EN BARBEROS
+    await db.collection("licenses").doc(normalizedCode).set(
+      {
+        status: "active",
+        active: true,
+        used: true,
+        activatedAt: new Date(),
+        licenseStartAt: new Date(),
+      },
+      { merge: true }
+    );
+
     await db.collection("barberias").doc(barberiaId).set(
       {
         licenseCode: normalizedCode,
@@ -90,8 +101,8 @@ export async function POST(req: Request) {
     );
 
     return NextResponse.json({
-      ok: true,
-      message: "License activated successfully",
+      success: true,
+      status: "active",
     });
   } catch (error: any) {
     console.error("[ACTIVATE ERROR FULL]:", error);

@@ -85,7 +85,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return item ? item.name : "Dashboard";
   };
 
-  const isPro = barberia?.plan === "pro" || barberia?.plan === "PRO";
+  const isPro =
+    barberia?.license?.status === "active" ||
+    barberia?.status === "active" ||
+    barberia?.subscriptionStatus === "active";
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-400 font-sans antialiased selection:bg-white/10 selection:text-white">

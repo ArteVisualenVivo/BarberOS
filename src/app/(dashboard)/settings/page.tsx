@@ -141,6 +141,11 @@ export default function SettingsPage() {
     );
   }
 
+  const isPro =
+    barberia?.license?.status === "active" ||
+    barberia?.status === "active" ||
+    barberia?.subscriptionStatus === "active";
+
   const isExpired =
     barberia?.licenseExpiresAt &&
     getDate(barberia?.licenseExpiresAt) &&
@@ -384,7 +389,7 @@ export default function SettingsPage() {
                 <div className="relative z-10 space-y-6">
                   <div className="flex items-center gap-4">
                     <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border ${
-                      barberia?.plan === 'pro' 
+                      isPro
                         ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' 
                         : 'bg-white/[0.03] text-zinc-500 border-white/[0.08]'
                     }`}>
@@ -393,13 +398,11 @@ export default function SettingsPage() {
                     <div>
                       <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-1">Estado de suscripción</p>
                       <h3 className="text-3xl font-bold text-white tracking-tight">
-                        {barberia?.plan === 'pro' ? 'Plan Pro' : barberia?.plan === 'trial' ? 'Trial gratuito' : 'Plan Gratis'}
+                        {isPro ? 'Plan Pro' : 'Plan Gratis'}
                       </h3>
                       <p className="text-sm text-zinc-400 mt-2">
-                        {barberia?.plan === 'pro'
+                        {isPro
                           ? 'Tu cuenta está activa con acceso completo.'
-                          : barberia?.plan === 'trial'
-                          ? 'Estás en el período de prueba de 7 días. Al expirar, solo podrás activar la cuenta en /activate.'
                           : 'Tu suscripción actual no es PRO. Activa tu cuenta en /activate.'
                         }
                       </p>
@@ -419,9 +422,8 @@ export default function SettingsPage() {
                   </div>
                     {/* --- MEJORAR AHORA / PLAN ACTIVADO --- */}
                     {(() => {
-                      // Considera activa si subscriptionStatus === 'active' o plan === 'pro' o licenseExpiresAt futura
                       const expiresAt = getDate(barberia?.licenseExpiresAt)?.getTime() || 0;
-                      const isLicenseActive = barberia?.subscriptionStatus === 'active' || barberia?.plan === 'pro' || (expiresAt && Date.now() < expiresAt);
+                      const isLicenseActive = isPro || (expiresAt && Date.now() < expiresAt);
                       if (isLicenseActive) {
                         return (
                           <div className="mt-8 flex flex-col items-center justify-center">
