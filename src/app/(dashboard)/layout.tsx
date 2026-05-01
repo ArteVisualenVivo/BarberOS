@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  console.log("🔥 DASHBOARD LAYOUT RENDER REAL");
   const { user, userData, loading: authLoading, logout } = useAuth();
   const { barberia, loading } = useBarberia();
   const router = useRouter();

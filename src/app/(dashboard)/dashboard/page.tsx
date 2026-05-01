@@ -374,17 +374,24 @@ export default function DashboardPage() {
               <Target size={120} className="text-white" />
             </div>
             {(() => {
-              const expiresRaw = barberia?.licenseExpiresAt;
+              console.log("[LICENSE DEBUG] barberia:", barberia);
+              console.log("[LICENSE DEBUG] licenseExpiresAt RAW:", barberia?.licenseExpiresAt);
+              console.log("[LICENSE DEBUG] typeof:", typeof barberia?.licenseExpiresAt);
+              console.log("[LICENSE DEBUG] has toDate:", !!barberia?.licenseExpiresAt?.toDate);
+
+              const raw =
+                barberia?.licenseExpiresAt ||
+                barberia?.subscription?.licenseExpiresAt ||
+                barberia?.data?.licenseExpiresAt;
+
               let expiresDate = null;
 
-              if (
-                expiresRaw &&
-                typeof expiresRaw === "object" &&
-                typeof expiresRaw.toDate === "function"
-              ) {
-                expiresDate = expiresRaw.toDate();
-              } else if (expiresRaw instanceof Date) {
-                expiresDate = expiresRaw;
+              if (raw?.toDate) {
+                expiresDate = raw.toDate();
+              } else if (raw instanceof Date) {
+                expiresDate = raw;
+              } else if (raw?.seconds) {
+                expiresDate = new Date(raw.seconds * 1000);
               } else {
                 expiresDate = null;
               }
@@ -393,6 +400,7 @@ export default function DashboardPage() {
               const expiresText = expiresDate
                 ? expiresDate.toLocaleDateString()
                 : "Sin vencimiento definido";
+              console.log("[DASHBOARD DEBUG] expiresText final:", expiresText);
 
               if (!isExpired && barberia?.plan === "pro") {
                 return (
