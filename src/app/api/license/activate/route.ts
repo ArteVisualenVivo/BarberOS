@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
+import { Timestamp } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, doc, setDoc, Timestamp } from "firebase/firestore";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 const barberosApp =
   getApps().find((app) => app.name === "barberos-main") ||
@@ -18,14 +19,6 @@ const barberosApp =
   );
 
 const dbBarberos = getFirestore(barberosApp);
-
-const toDate = (value: any) => {
-  if (!value) return null;
-  if (typeof value.toDate === "function") return value.toDate();
-  if (typeof value.seconds === "number") return new Date(value.seconds * 1000);
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
 
 export async function POST(req: Request) {
   try {
@@ -78,10 +71,8 @@ export async function POST(req: Request) {
     }
 
     const license = licenseSnap.data();
-    const licenseStartAtRaw = license?.licenseStartAt;
-    const licenseExpiresAtRaw = license?.expiresAt;
-    const licenseStartAt = toDate(licenseStartAtRaw);
-    const licenseExpiresAt = toDate(licenseExpiresAtRaw);
+    const licenseStartAt = license?.licenseStartAt;
+    const licenseExpiresAt = license?.expiresAt;
 
     if (!licenseStartAt || !licenseExpiresAt) {
       return new Response(
@@ -107,8 +98,12 @@ export async function POST(req: Request) {
       subscriptionStatus: "active",
       status: "active",
       plan: "pro",
-      licenseStartAt: Timestamp.fromDate(licenseStartAt),
-      licenseExpiresAt: Timestamp.fromDate(licenseExpiresAt),
+      licenseStartAt: Timestamp.fromDate(
+        licenseStartAt.toDate ? licenseStartAt.toDate() : new Date(licenseStartAt)
+      ),
+      licenseExpiresAt: Timestamp.fromDate(
+        licenseExpiresAt.toDate ? licenseExpiresAt.toDate() : new Date(licenseExpiresAt)
+      ),
       updatedAt: new Date(),
     }, { merge: true });
 
