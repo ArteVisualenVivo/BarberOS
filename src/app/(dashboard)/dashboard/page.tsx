@@ -377,10 +377,16 @@ export default function DashboardPage() {
               const expiresRaw = barberia?.licenseExpiresAt;
               let expiresDate = null;
 
-              if (expiresRaw?.toDate) {
+              if (
+                expiresRaw &&
+                typeof expiresRaw === "object" &&
+                typeof expiresRaw.toDate === "function"
+              ) {
                 expiresDate = expiresRaw.toDate();
               } else if (expiresRaw instanceof Date) {
                 expiresDate = expiresRaw;
+              } else {
+                expiresDate = null;
               }
 
               const isExpired = !!expiresDate && expiresDate < new Date();
