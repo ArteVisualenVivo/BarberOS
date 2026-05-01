@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
+import { Timestamp } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
@@ -36,6 +37,9 @@ export async function POST(req: Request) {
     }
 
     const normalizedCode = String(code).toUpperCase().trim();
+    const licenseStartAt = new Date();
+    const licenseExpiresAt = new Date(licenseStartAt);
+    licenseExpiresAt.setMonth(licenseExpiresAt.getMonth() + 1);
 
     let licenseSnap;
 
@@ -84,6 +88,8 @@ export async function POST(req: Request) {
       subscriptionStatus: "active",
       status: "active",
       plan: "pro",
+      licenseStartAt: Timestamp.fromDate(licenseStartAt),
+      licenseExpiresAt: Timestamp.fromDate(licenseExpiresAt),
       updatedAt: new Date(),
     }, { merge: true });
 

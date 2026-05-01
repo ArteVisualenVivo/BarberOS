@@ -375,17 +375,16 @@ export default function DashboardPage() {
             </div>
             {(() => {
               const licenseExpiresAt = getDate(barberia?.licenseExpiresAt);
-              const isExpired =
-                !!licenseExpiresAt &&
-                licenseExpiresAt < new Date();
+              const isExpired = !!licenseExpiresAt && licenseExpiresAt < new Date();
+              const expiresText = licenseExpiresAt
+                ? licenseExpiresAt.toLocaleDateString()
+                : "Sin vencimiento definido";
 
               if (!isExpired && barberia?.plan === "pro") {
                 return (
                   <div>
                     <h3 className="text-sm font-bold text-white tracking-tight">Plan Activo</h3>
-                    <p className="text-xs text-zinc-500 leading-relaxed mb-6 font-medium">
-                      Vence el: {licenseExpiresAt?.toLocaleDateString()}
-                    </p>
+                    <p className="text-xs text-zinc-500 leading-relaxed mb-6 font-medium">Vence el: {expiresText}</p>
                   </div>
                 );
               }
