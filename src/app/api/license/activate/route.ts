@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
-import { Timestamp } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, Timestamp } from "firebase/firestore";
 
 const barberosApp =
   getApps().find((app) => app.name === "barberos-main") ||
