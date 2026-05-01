@@ -1,11 +1,30 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
+import { initializeApp, getApps } from "firebase/app";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+
+const barberosApp =
+  getApps().find((app) => app.name === "barberos-main") ||
+  initializeApp(
+    {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+    },
+    "barberos-main"
+  );
+
+const dbBarberos = getFirestore(barberosApp);
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { code, barberiaId } = body;
 
+    console.log("ACTIVATE INPUT:", { barberiaId, code });
     console.log("[ACTIVATE] code:", code);
     console.log("[ACTIVATE] barberiaId:", barberiaId);
 
@@ -60,13 +79,20 @@ export async function POST(req: Request) {
       },
     );
 
-    await db.collection("barberias").doc(barberiaId).update(
-      {
-        subscriptionStatus: "active",
-        status: "active",
-        plan: "pro",
-      },
-    );
+    await setDoc(doc(dbBarberos, "barberias", barberiaId), {
+      licenseCode: code,
+      subscriptionStatus: "active",
+      status: "active",
+      plan: "pro",
+      updatedAt: new Date(),
+    }, { merge: true });
+
+    console.log("ACTIVATE SUCCESS:", {
+      barberiaId,
+      code,
+      saasUpdated: true,
+      barberiaUpdated: true
+    });
 
     return new Response(
       JSON.stringify({
