@@ -374,10 +374,18 @@ export default function DashboardPage() {
               <Target size={120} className="text-white" />
             </div>
             {(() => {
-              const licenseExpiresAt = getDate(barberia?.licenseExpiresAt);
-              const isExpired = !!licenseExpiresAt && licenseExpiresAt < new Date();
-              const expiresText = licenseExpiresAt
-                ? licenseExpiresAt.toLocaleDateString()
+              const expiresRaw = barberia?.licenseExpiresAt;
+              let expiresDate = null;
+
+              if (expiresRaw?.toDate) {
+                expiresDate = expiresRaw.toDate();
+              } else if (expiresRaw instanceof Date) {
+                expiresDate = expiresRaw;
+              }
+
+              const isExpired = !!expiresDate && expiresDate < new Date();
+              const expiresText = expiresDate
+                ? expiresDate.toLocaleDateString()
                 : "Sin vencimiento definido";
 
               if (!isExpired && barberia?.plan === "pro") {
