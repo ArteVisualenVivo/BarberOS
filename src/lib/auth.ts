@@ -15,6 +15,7 @@ export interface UserData {
   nombre?: string;
   role: "owner" | "admin";
   barberiaId?: string;
+  trialConsumed?: boolean;
   createdAt: any;
 }
 
@@ -29,6 +30,8 @@ export const registerUser = async (email: string, password: string) => {
     uid: user.uid,
     email: user.email,
     role: "owner",
+    barberiaId: null,
+    trialConsumed: false,
     createdAt: serverTimestamp(),
   });
 

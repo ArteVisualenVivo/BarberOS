@@ -1,12 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  registerUser,
-  createUserData
-} from "@/lib/auth";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { registerUser } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, Scissors, ArrowRight } from "lucide-react";
@@ -26,79 +21,46 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      // 1. Crear usuario en Auth y documento básico en Firestore
       const user = await registerUser(email, password);
+      const idToken = await user.getIdToken();
 
-      // 2. Generar slug para la barbería
-      const slug = nombreBarberia
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, "")
-        .replace(/[\s_-]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-
-      // 3. Crear documento de barbería en Firestore con trial de 7 días
-      const trialDays = 7;
-      const trialStartAt = new Date();
-
-      const barberiaRef = await addDoc(collection(db, "barberias"), {
-        nombre: nombreBarberia,
-        slug,
-        ownerId: user.uid,
-        plan: "trial",
-        trialStartAt: Timestamp.fromDate(trialStartAt),
-        trialDays,
-        subscriptionStatus: "trial",
-        trialExpired: false,
-        licenseCode: null,
-        licenseStartAt: null,
-        licenseDurationDays: 0,
-        licenseExpiresAt: null,
-        createdAt: serverTimestamp(),
+      // La barbería y el trial se crean en backend para impedir "trial infinito"
+      // aunque alguien intente repetir el flujo por fuera del frontend.
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ nombreBarberia }),
       });
 
-      // 4. Actualizar datos del usuario con el ID de su barbería
-      await createUserData(user.uid, {
-        barberiaId: barberiaRef.id,
-      });
+      const data = await response.json();
 
-      // Redirección basada en trial/subscription
-      try {
-        const trialStartMs =
-          trialStartAt && typeof trialStartAt.getTime === "function"
-            ? trialStartAt.getTime()
-            : Number(new Date(trialStartAt));
-
-        const trialDaysNumber = Number(trialDays) || 7;
-        const trialEndsMs = trialStartMs + trialDaysNumber * 24 * 60 * 60 * 1000;
-
-        const now = Date.now();
-
-        const hasValidTrial = Number.isFinite(trialStartMs) && now < trialEndsMs;
-
-        const hasActiveSubscription = false; // newly created barbería starts on trial
-
-        if (hasActiveSubscription || hasValidTrial) {
-          router.push("/dashboard");
-        } else {
-          router.push("/activate");
-        }
-      } catch (e) {
-        // Fallback: si algo falla, ir al dashboard para no bloquear la UX
-        router.push("/dashboard");
+      if (response.ok && data?.success) {
+        router.push(data?.redirectTo || "/dashboard");
+        return;
       }
+
+      if (response.status === 409) {
+        router.push(data?.redirectTo || "/login");
+        return;
+      }
+
+      throw new Error(data?.error || "register_backend_failed");
     } catch (err: any) {
       console.error("Error completo de registro:", err);
-      
-      // Manejo de errores específicos de Firebase
+
       if (err.code === "auth/configuration-not-found") {
-        setError("Error de configuración: Por favor verifica que el método 'Email/Password' esté habilitado en Firebase Console.");
+        setError("Error de configuración: verifica que Email/Password esté habilitado en Firebase Console.");
       } else if (err.code === "auth/email-already-in-use") {
         setError("Este correo electrónico ya está registrado.");
       } else if (err.code === "auth/invalid-email") {
         setError("El correo electrónico no es válido.");
       } else if (err.code === "auth/weak-password") {
         setError("La contraseña es muy débil (mínimo 6 caracteres).");
+      } else if (err.message === "invalid_or_taken_slug") {
+        setError("El nombre de la barbería genera una URL inválida o ya está en uso.");
       } else {
         setError("Ocurrió un error inesperado. Inténtalo de nuevo más tarde.");
       }
