@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   Layout,
   Bell,
-  Lock
+  BookOpen,
+  ChevronDown
 } from "lucide-react";
 
 const DIAS = [
@@ -41,7 +42,7 @@ export default function SettingsPage() {
   const { barberia, loading, refresh } = useBarberia();
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState("general"); // general, horarios, plan
+  const [activeTab, setActiveTab] = useState("general"); // general, horarios, plan, notifications, docs
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -53,6 +54,27 @@ export default function SettingsPage() {
   });
 
   const [horarios, setHorarios] = useState<any>(DEFAULT_HORARIOS);
+
+  type NotificationChannel = "whatsapp" | "email";
+  type NotificationEvent = "nuevo_turno" | "cancelacion" | "recordatorio" | "nuevo_cliente";
+
+  type NotificationPrefs = {
+    channels: Record<NotificationChannel, boolean>;
+    events: Record<NotificationEvent, boolean>;
+  };
+
+  const NOTIF_DEFAULTS: NotificationPrefs = {
+    channels: { whatsapp: true, email: false },
+    events: {
+      nuevo_turno: true,
+      cancelacion: true,
+      recordatorio: true,
+      nuevo_cliente: false,
+    },
+  };
+
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(NOTIF_DEFAULTS);
+  const [notifSaved, setNotifSaved] = useState(false);
 
   const generateSlug = (value: string) => {
     return value
@@ -90,6 +112,25 @@ export default function SettingsPage() {
     }
   }, [barberia]);
 
+  useEffect(() => {
+    if (!barberia?.id) return;
+
+    try {
+      const key = `barberos:notifPrefs:${barberia.id}`;
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed?.channels && parsed?.events) {
+        setNotifPrefs({
+          channels: { ...NOTIF_DEFAULTS.channels, ...parsed.channels },
+          events: { ...NOTIF_DEFAULTS.events, ...parsed.events },
+        });
+      }
+    } catch (e) {
+      console.error("Error loading notif prefs:", e);
+    }
+  }, [barberia?.id]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!barberia) return;
@@ -114,6 +155,19 @@ export default function SettingsPage() {
       console.error(error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveNotifications = () => {
+    if (!barberia?.id) return;
+
+    try {
+      const key = `barberos:notifPrefs:${barberia.id}`;
+      localStorage.setItem(key, JSON.stringify(notifPrefs));
+      setNotifSaved(true);
+      setTimeout(() => setNotifSaved(false), 2500);
+    } catch (e) {
+      console.error("Error saving notif prefs:", e);
     }
   };
 
@@ -185,6 +239,22 @@ export default function SettingsPage() {
           >
             <CreditCard size={14} /> Suscripción
           </button>
+          <button
+            onClick={() => setActiveTab("notifications")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
+              activeTab === "notifications" ? "bg-white/[0.08] text-white shadow-soft" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Bell size={14} /> Notificaciones
+          </button>
+          <button
+            onClick={() => setActiveTab("docs")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
+              activeTab === "docs" ? "bg-white/[0.08] text-white shadow-soft" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <BookOpen size={14} /> DocumentaciÃ³n
+          </button>
         </div>
       </div>
 
@@ -195,13 +265,23 @@ export default function SettingsPage() {
           <button className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'horarios' ? 'bg-white/[0.05] text-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'}`} onClick={() => setActiveTab('horarios')}>Horarios de atención</button>
           <button className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'plan' ? 'bg-white/[0.05] text-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'}`} onClick={() => setActiveTab('plan')}>Suscripción</button>
           <div className="pt-4 mt-4 border-t border-white/[0.05]">
-            <button className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] flex items-center justify-between group">
+            <button
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${
+                activeTab === 'notifications' ? 'bg-white/[0.05] text-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'
+              }`}
+              onClick={() => setActiveTab('notifications')}
+            >
               Notificaciones
-              <Lock size={12} className="text-zinc-700 group-hover:text-zinc-500" />
+              <Bell size={14} className={activeTab === 'notifications' ? 'text-white' : 'text-zinc-700'} />
             </button>
-            <button className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] flex items-center justify-between group">
-              Seguridad
-              <Lock size={12} className="text-zinc-700 group-hover:text-zinc-500" />
+            <button
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${
+                activeTab === 'docs' ? 'bg-white/[0.05] text-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'
+              }`}
+              onClick={() => setActiveTab('docs')}
+            >
+              DocumentaciÃ³n
+              <BookOpen size={14} className={activeTab === 'docs' ? 'text-white' : 'text-zinc-700'} />
             </button>
           </div>
         </div>
@@ -380,8 +460,8 @@ export default function SettingsPage() {
             </div>
           )}
 
-              {activeTab === "plan" && (
-            <div className="space-y-8 animate-in fade-in duration-500">
+               {activeTab === "plan" && (
+             <div className="space-y-8 animate-in fade-in duration-500">
               <div className="glass p-8 rounded-2xl border-white/[0.08] relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-10 opacity-[0.03] transition-opacity pointer-events-none">
                   <CreditCard size={180} />
@@ -470,7 +550,212 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
+
+          {activeTab === "notifications" && (
+            <div className="glass rounded-2xl overflow-hidden shadow-soft">
+              <div className="p-6 border-b border-white/[0.05] bg-white/[0.01]">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Notificaciones</h3>
+                <p className="text-[11px] text-zinc-500 mt-1">
+                  Configura quÃ© alertas querÃ©s recibir. Por ahora se guarda localmente en este dispositivo (UI-ready).
+                </p>
+              </div>
+
+              <div className="p-8 space-y-8">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-500">Canales</p>
+                    {[
+                      { id: "whatsapp" as const, label: "WhatsApp (principal)", desc: "Alertas rÃ¡pidas para tu dÃ­a a dÃ­a." },
+                      { id: "email" as const, label: "Email (secundario)", desc: "Resumen y soporte (cuando se active)." },
+                    ].map((c) => (
+                      <label key={c.id} className="flex items-start justify-between gap-4 py-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-white">{c.label}</p>
+                          <p className="text-xs text-zinc-500 mt-1 leading-relaxed">{c.desc}</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={!!notifPrefs.channels[c.id]}
+                          onChange={(e) =>
+                            setNotifPrefs((prev) => ({
+                              ...prev,
+                              channels: { ...prev.channels, [c.id]: e.target.checked },
+                            }))
+                          }
+                          className="mt-1 h-5 w-5 accent-white"
+                        />
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-500">Eventos</p>
+                    {[
+                      { id: "nuevo_turno" as const, label: "Nuevo turno creado", desc: "Cuando entra una reserva pÃºblica o lo creas manual." },
+                      { id: "cancelacion" as const, label: "CancelaciÃ³n de turno", desc: "Cuando un turno cambia a cancelado." },
+                      { id: "recordatorio" as const, label: "Recordatorio de turno", desc: "Antes de cada turno (cuando se active)." },
+                      { id: "nuevo_cliente" as const, label: "Nuevo cliente registrado", desc: "Cuando se registra un cliente desde reserva o dashboard." },
+                    ].map((ev) => (
+                      <label key={ev.id} className="flex items-start justify-between gap-4 py-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-white">{ev.label}</p>
+                          <p className="text-xs text-zinc-500 mt-1 leading-relaxed">{ev.desc}</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={!!notifPrefs.events[ev.id]}
+                          onChange={(e) =>
+                            setNotifPrefs((prev) => ({
+                              ...prev,
+                              events: { ...prev.events, [ev.id]: e.target.checked },
+                            }))
+                          }
+                          className="mt-1 h-5 w-5 accent-white"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveNotifications}
+                    className="flex items-center gap-2 bg-white text-black px-8 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-zinc-200 transition-all shadow-soft"
+                  >
+                    <Save size={14} />
+                    Guardar Notificaciones
+                  </button>
+                  {notifSaved && (
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest animate-in fade-in duration-300">
+                      Preferencias guardadas
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "docs" && (
+            <DocsPanel isPro={isPro} />
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DocsPanel({ isPro }: { isPro: boolean }) {
+  const [openId, setOpenId] = useState<string>("servicios");
+
+  const sections = [
+    {
+      id: "servicios",
+      title: "CÃ³mo crear servicios correctamente",
+      body: (
+        <div className="space-y-3 text-sm text-zinc-300 leading-7">
+          <p>
+            Ve a <span className="font-semibold text-white">Servicios</span> y crea cada servicio con un nombre claro, duraciÃ³n (min) y precio. Esto alimenta la
+            reserva pÃºblica y el formulario de turnos manuales.
+          </p>
+          <p className="text-zinc-500 text-xs">
+            Buenas prÃ¡cticas: nombres simples, duraciones realistas y precios consistentes para evitar confusiones.
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "turnos",
+      title: "Turnos manuales y desde reserva pÃºblica",
+      body: (
+        <div className="space-y-3 text-sm text-zinc-300 leading-7">
+          <p>
+            Puedes crear turnos manualmente desde <span className="font-semibold text-white">Turnos</span> y tambiÃ©n recibir reservas desde tu link pÃºblico.
+          </p>
+          <p className="text-zinc-500 text-xs">
+            Revisa tu lista de turnos para confirmar, reprogramar o cancelar segÃºn corresponda.
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "link",
+      title: "CÃ³mo funciona el link de reservas pÃºblico",
+      body: (
+        <div className="space-y-3 text-sm text-zinc-300 leading-7">
+          <p>
+            Tu link pÃºblico se arma con el <span className="font-semibold text-white">slug</span> del negocio. CompÃ¡rtelo por WhatsApp o redes para que el cliente
+            elija servicios, fecha y horario.
+          </p>
+          <p className="text-zinc-500 text-xs">
+            Tip: configura horarios y crea servicios para que la pÃ¡gina de reservas muestre opciones reales.
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "trialpro",
+      title: "Trial y Plan PRO",
+      body: (
+        <div className="space-y-3 text-sm text-zinc-300 leading-7">
+          <p>
+            El trial permite usar el dashboard por tiempo limitado. Si vence, el acceso se bloquea y verÃ¡s la pantalla de activaciÃ³n.
+          </p>
+          <p className="text-zinc-500 text-xs">
+            Estado actual: {isPro ? <span className="text-emerald-400 font-semibold">PRO activo</span> : <span className="text-zinc-400 font-semibold">No PRO</span>}
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "activar",
+      title: "CÃ³mo activar licencia",
+      body: (
+        <div className="space-y-3 text-sm text-zinc-300 leading-7">
+          <p>
+            Si tu trial finaliza, entra a <span className="font-semibold text-white">/activate</span>, solicita el cÃ³digo al admin por WhatsApp y colÃ³calo en la
+            pantalla de activaciÃ³n.
+          </p>
+          <p className="text-zinc-500 text-xs">Una vez activado, el sistema marcarÃ¡ el plan como PRO y recuperarÃ¡s acceso completo.</p>
+        </div>
+      ),
+    },
+    {
+      id: "buenas",
+      title: "Buenas prÃ¡cticas para no perder clientes",
+      body: (
+        <div className="space-y-3 text-sm text-zinc-300 leading-7">
+          <p>Confirma turnos a tiempo, comparte tu link pÃºblico en cada conversaciÃ³n y mantÃ©n tu catÃ¡logo de servicios actualizado.</p>
+          <p className="text-zinc-500 text-xs">RecomendaciÃ³n: usa WhatsApp del cliente para recontacto y agenda el dÃ­a con duraciones realistas.</p>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="glass rounded-2xl overflow-hidden shadow-soft">
+      <div className="p-6 border-b border-white/[0.05] bg-white/[0.01]">
+        <h3 className="text-sm font-bold text-white uppercase tracking-wider">DocumentaciÃ³n</h3>
+        <p className="text-[11px] text-zinc-500 mt-1">GuÃ­as rÃ¡pidas alineadas a cÃ³mo funciona BarberOS hoy.</p>
+      </div>
+
+      <div className="p-6 space-y-3">
+        {sections.map((s) => {
+          const isOpen = openId === s.id;
+          return (
+            <div key={s.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setOpenId((prev) => (prev === s.id ? "" : s.id))}
+                className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-white/[0.03] transition"
+              >
+                <p className="text-sm font-bold text-white">{s.title}</p>
+                <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isOpen && <div className="px-5 pb-5">{s.body}</div>}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
