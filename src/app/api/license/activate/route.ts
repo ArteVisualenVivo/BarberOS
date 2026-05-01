@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
-import { Timestamp } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
@@ -70,11 +69,25 @@ export async function POST(req: Request) {
       );
     }
 
-    const license = licenseSnap.data();
-    const licenseStartAt = license?.licenseStartAt;
-    const licenseExpiresAt = license?.expiresAt;
+    const license = licenseSnap.data() || {};
+    const startRaw = license?.licenseStartAt;
+    const endRaw = license?.expiresAt;
 
-    if (!licenseStartAt || !licenseExpiresAt) {
+    if (!startRaw || !endRaw) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          ok: false,
+          error: "invalid_license_dates",
+        }),
+        { status: 200 }
+      );
+    }
+
+    const startDate = startRaw?.toDate ? startRaw.toDate() : new Date(startRaw);
+    const endDate = endRaw?.toDate ? endRaw.toDate() : new Date(endRaw);
+
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -90,7 +103,7 @@ export async function POST(req: Request) {
       active: true,
       used: true,
       activatedAt: new Date(),
-      licenseStartAt,
+      licenseStartAt: startDate,
     });
 
     await setDoc(doc(dbBarberos, "barberias", barberiaId), {
@@ -98,12 +111,8 @@ export async function POST(req: Request) {
       subscriptionStatus: "active",
       status: "active",
       plan: "pro",
-      licenseStartAt: Timestamp.fromDate(
-        licenseStartAt.toDate ? licenseStartAt.toDate() : new Date(licenseStartAt)
-      ),
-      licenseExpiresAt: Timestamp.fromDate(
-        licenseExpiresAt.toDate ? licenseExpiresAt.toDate() : new Date(licenseExpiresAt)
-      ),
+      licenseStartAt: startDate,
+      licenseExpiresAt: endDate,
       updatedAt: new Date(),
     }, { merge: true });
 
