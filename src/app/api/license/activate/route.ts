@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
+import { Timestamp } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
@@ -84,8 +85,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const startDate = startRaw?.toDate ? startRaw.toDate() : new Date(startRaw);
-    const endDate = endRaw?.toDate ? endRaw.toDate() : new Date(endRaw);
+    const startDate =
+      startRaw instanceof Timestamp ? startRaw.toDate() : new Date(startRaw);
+
+    const endDate =
+      endRaw instanceof Timestamp ? endRaw.toDate() : new Date(endRaw);
 
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
       return new Response(
